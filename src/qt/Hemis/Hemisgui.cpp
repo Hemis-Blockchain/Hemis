@@ -254,7 +254,7 @@ void HemisGUI::setClientModel(ClientModel* _clientModel)
         topBar->setClientModel(clientModel);
         dashboard->setClientModel(clientModel);
         sendWidget->setClientModel(clientModel);
-        gamematersWidget->setClientModel(clientModel);
+        gamemastersWidget->setClientModel(clientModel);
         settingsWidget->setClientModel(clientModel);
         governancewidget->setClientModel(clientModel);
 

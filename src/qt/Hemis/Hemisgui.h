@@ -141,7 +141,7 @@ private:
     SendWidget *sendWidget = nullptr;
     ReceiveWidget *receiveWidget = nullptr;
     AddressesWidget *addressesWidget = nullptr;
-    GameMastersWidget *gamemaStersWidget = nullptr;
+    GameMastersWidget *gamemastersWidget = nullptr;
     ColdStakingWidget *coldStakingWidget = nullptr;
     GovernanceWidget* governancewidget{nullptr};
     SettingsWidget* settingsWidget = nullptr;

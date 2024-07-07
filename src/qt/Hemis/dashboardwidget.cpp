@@ -52,9 +52,9 @@ DashboardWidget::DashboardWidget(HemisGUI* parent) :
     // Staking Information
     setCssSubtitleScreen(ui->labelMessage);
     setCssProperty(ui->labelSquarePiv, "square-chart-piv");
-    //setCssProperty(ui->labelSquareGM, "square-chart-gm");
+    setCssProperty(ui->labelSquareGM, "square-chart-gm");
     setCssProperty(ui->labelPiv, "text-chart-piv");
-    //setCssProperty(ui->labelGM, "text-chart-gm");
+    setCssProperty(ui->labelGM, "text-chart-gm");
 
     // Staking Amount
     QFont fontBold;
@@ -62,7 +62,7 @@ DashboardWidget::DashboardWidget(HemisGUI* parent) :
 
     setCssProperty(ui->labelChart, "legend-chart");
     setCssProperty(ui->labelAmountPiv, "text-stake-piv-disable");
-    //setCssProperty(ui->labelAmountGM, "text-stake-gm-disable");
+    setCssProperty(ui->labelAmountGM, "text-stake-gm-disable");
 
     setCssProperty({ui->pushButtonAll,  ui->pushButtonMonth, ui->pushButtonYear}, "btn-check-time");
     setCssProperty({ui->comboBoxMonths,  ui->comboBoxYears}, "btn-combo-chart-selected");
@@ -664,9 +664,9 @@ void DashboardWidget::onChartRefreshed()
     }
     // init sets
     set0 = new QBarSet(tr("Stakes"));
-    //set1 = new QBarSet(tr("GM"));
+    set1 = new QBarSet(tr("GM"));
     set0->setColor(QColor(255,144,0));
-    //set1->setColor(QColor(255,179,0));
+    set1->setColor(QColor(255,179,0));
 
     if (!series) {
         series = new QBarSeries();
@@ -676,23 +676,23 @@ void DashboardWidget::onChartRefreshed()
     series->attachAxis(axisY);
 
     set0->append(chartData->valuesPiv);
-    //set1->append(chartData->valuesGM);
+    set1->append(chartData->valuesGM);
 
     // Total
     nDisplayUnit = walletModel->getOptionsModel()->getDisplayUnit();
     if (chartData->totalPiv > 0 || chartData->totalGM > 0) {
         setCssProperty(ui->labelAmountPiv, "text-stake-piv");
-        //setCssProperty(ui->labelAmountGM, "text-stake-gm");
+        setCssProperty(ui->labelAmountGM, "text-stake-gm");
     } else {
         setCssProperty(ui->labelAmountPiv, "text-stake-piv-disable");
-        //setCssProperty(ui->labelAmountGM, "text-stake-gm-disable");
+        setCssProperty(ui->labelAmountGM, "text-stake-gm-disable");
     }
     forceUpdateStyle({ui->labelAmountPiv});
     ui->labelAmountPiv->setText(GUIUtil::formatBalance(chartData->totalPiv, nDisplayUnit));
-    //ui->labelAmountGM->setText(GUIUtil::formatBalance(chartData->totalGM, nDisplayUnit));
+    ui->labelAmountGM->setText(GUIUtil::formatBalance(chartData->totalGM, nDisplayUnit));
 
     series->append(set0);
-    /*if (hasGMRewards)
+    if (hasGMRewards)
         series->append(set1);*/
 
     // bar width

@@ -560,7 +560,6 @@
           </item>
          </layout>
         </item>
-        <item>
           <item>
            <widget class="QLabel" name="labelAmountGM">
             <property name="text">

@@ -503,7 +503,7 @@
             <item>
              <widget class="QLabel" name="labelMessage">
               <property name="text">
-               <string>Amount of HMS stakes and gamemasters rewards</string>
+               <string>Amount of HMS stakes and GameMasters rewards</string>
               </property>
              </widget>
             </item>
@@ -558,8 +558,6 @@
             </property>
            </widget>
           </item>
-         </layout>
-        </item>
           <item>
            <widget class="QLabel" name="labelAmountGM">
             <property name="text">

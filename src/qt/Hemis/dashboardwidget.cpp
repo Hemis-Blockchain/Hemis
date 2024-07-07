@@ -693,7 +693,7 @@ void DashboardWidget::onChartRefreshed()
 
     series->append(set0);
     if (hasGMRewards)
-        series->append(set1);*/
+        series->append(set1);
 
     // bar width
     if (chartShow == YEAR)

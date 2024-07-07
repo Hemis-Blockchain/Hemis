@@ -700,8 +700,6 @@
                   </property>
                  </spacer>
                 </item>
-               </layout>
-              </item>
                 <item>
                  <widget class="QLabel" name="labelSquareGM">
                   <property name="minimumSize">

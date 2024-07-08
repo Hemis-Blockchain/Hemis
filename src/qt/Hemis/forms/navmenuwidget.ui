@@ -293,8 +293,8 @@ background-color:transparent;
              </size>
             </property>
             <property name="text">
-             <string>MASTER
-NODES</string>
+             <string>GAME
+             MASTERS</string>
             </property>
             <property name="iconSize">
              <size>

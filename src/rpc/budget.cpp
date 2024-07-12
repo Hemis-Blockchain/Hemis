@@ -798,18 +798,18 @@ UniValue cleanbudget(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafe argNames
   //  --------------------- ------------------------  -----------------------  ------ --------
-    { "budget",             "checkbudgets",           &checkbudgets,           true,  {} },
-    { "budget",             "getbudgetinfo",          &getbudgetinfo,          true,  {"name"} },
-    { "budget",             "getbudgetprojection",    &getbudgetprojection,    true,  {} },
-    { "budget",             "getbudgetvotes",         &getbudgetvotes,         true,  {"name"} },
-    { "budget",             "getnextsuperblock",      &getnextsuperblock,      true,  {} },
-    { "budget",             "gmbudgetrawvote",        &gmbudgetrawvote,        true,  {"collat_txid","collat_vout","hash","votecast","time","sig"} },
-    { "budget",             "gmbudgetvote",           &gmbudgetvote,           true,  {"mode","hash","votecast","alias","legacy"} },
-    { "budget",             "gmfinalbudget",          &gmfinalbudget,          true,  {"command"} },
-    { "budget",             "preparebudget",          &preparebudget,          true,  {"name","url","npayments","start","address","monthly_payment"} },
-    { "budget",             "submitbudget",           &submitbudget,           true,  {"name","url","npayments","start","address","monthly_payment","fee_txid"}  },
 
     /** Not shown in help */
+    { "hidden",             "checkbudgets",           &checkbudgets,           true,  {} },
+    { "hidden",             "getbudgetinfo",          &getbudgetinfo,          true,  {"name"} },
+    { "hidden",             "getbudgetprojection",    &getbudgetprojection,    true,  {} },
+    { "hidden",             "getbudgetvotes",         &getbudgetvotes,         true,  {"name"} },
+    { "hidden",             "getnextsuperblock",      &getnextsuperblock,      true,  {} },
+    { "hidden",             "gmbudgetrawvote",        &gmbudgetrawvote,        true,  {"collat_txid","collat_vout","hash","votecast","time","sig"} },
+    { "hidden",             "gmbudgetvote",           &gmbudgetvote,           true,  {"mode","hash","votecast","alias","legacy"} },
+    { "hidden",             "gmfinalbudget",          &gmfinalbudget,          true,  {"command"} },
+    { "hidden",             "preparebudget",          &preparebudget,          true,  {"name","url","npayments","start","address","monthly_payment"} },
+    { "hidden",             "submitbudget",           &submitbudget,           true,  {"name","url","npayments","start","address","monthly_payment","fee_txid"}  },
     { "hidden",             "gmfinalbudgetsuggest",   &gmfinalbudgetsuggest,   true,  {} },
     { "hidden",             "createrawgmfinalbudget", &createrawgmfinalbudget, true,  {"budgetname", "blockstart", "proposals", "feetxid"} },
     { "hidden",             "cleanbudget",            &cleanbudget,            true,  {"try_sync"} },

@@ -496,14 +496,14 @@
                </size>
               </property>
               <property name="text">
-               <string>Staking</string>
+               <string>Staking/GameMaster Rewards</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QLabel" name="labelMessage">
               <property name="text">
-               <string>Amount of HMS stakes</string>
+               <string>Amount of HMS stakes and GameMasters rewards</string>
               </property>
              </widget>
             </item>
@@ -552,6 +552,16 @@
            <widget class="QLabel" name="labelAmountPiv">
             <property name="text">
              <string notr="true">0 Stakes</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="labelAmountGM">
+            <property name="text">
+             <string notr="true">0 GM</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -687,6 +697,32 @@
                    </size>
                   </property>
                  </spacer>
+                </item>
+                <item>
+                 <widget class="QLabel" name="labelSquareGM">
+                  <property name="minimumSize">
+                   <size>
+                    <width>14</width>
+                    <height>14</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>14</width>
+                    <height>14</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="labelGM">
+                  <property name="text">
+                   <string>Gamemaster</string>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </item>

@@ -27,7 +27,6 @@ enum UpgradeIndex : uint32_t {
     BASE_NETWORK,
     UPGRADE_POS,
     UPGRADE_POS_V2,
-    UPGRADE_GM_ENABLE,
     UPGRADE_ZC,
     UPGRADE_ZC_V2,
     UPGRADE_BIP65,
@@ -38,6 +37,7 @@ enum UpgradeIndex : uint32_t {
     UPGRADE_V5_2,
     UPGRADE_V5_3,
     UPGRADE_V5_5,
+    UPGRADE_GM_ENABLE,
     UPGRADE_V6_0,
     UPGRADE_TESTDUMMY,
     // NOTE: Also add new upgrades to NetworkUpgradeInfo in upgrades.cpp

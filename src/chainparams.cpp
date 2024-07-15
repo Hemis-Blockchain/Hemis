@@ -275,7 +275,7 @@ public:
         consensus.nMaxMoneyOut = 30000000 * COIN;
         consensus.nGMCollateralAmt = 1000 * COIN;
         consensus.nGMBlockReward = 0.775 * COIN;
-        consensus.nNewGMBlockReward = 1 * COIN;
+        consensus.nNewGMBlockReward = 2.9424999945 * COIN;
         consensus.nGMCollateralMinConf = 15;
         consensus.nProposalEstablishmentTime = 60 * 60 * 24;    // must be at least a day old to make it into a budget
         consensus.nStakeMinAge = 60 * 60;
@@ -359,7 +359,7 @@ public:
 
         // Note that of those with the service bits flag, most only support a subset of possible options
         vSeeds.emplace_back("hmsdns.Hemis.tech", true);
-	vSeeds.emplace_back("hemis.hypur.xyz", true);     // Primary DNS Seeder from Fuzzbawls
+	    vSeeds.emplace_back("hemis.hypur.xyz", true);     // Primary DNS Seeder from Fuzzbawls
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 40);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 13);
@@ -443,7 +443,7 @@ public:
         consensus.nMaxMoneyOut = 30000000 * COIN;
         consensus.nGMCollateralAmt = 1000 * COIN;
         consensus.nGMBlockReward = 0.775 * COIN;
-        consensus.nNewGMBlockReward = 1 * COIN;
+        consensus.nNewGMBlockReward = 2.9424999945 * COIN;
         consensus.nGMCollateralMinConf = 15;
         consensus.nProposalEstablishmentTime = 60 * 60 * 24;    // must be at least a day old to make it into a budget
         consensus.nStakeMinAge = 60 * 60;

@@ -370,7 +370,7 @@ jobs:
 
       - name: Zip Params
         if: ${{ matrix.config.host == 'x86_64-unknown-linux-gnu' }}
-        run: cd /home/runner/work/Hemis/Hemis/${{github.run_number}}-x86_64-unknown-linux-gnu/params && zip -rj -x Makefile.* Hemis-Params.zip *
+        run: cd /home/runner/work/Hemis/Hemis/params && zip -rj -x Makefile.* Hemis-Params.zip *
 
       - name: Zip AArch64 Builds
         if: ${{ matrix.config.host == 'aarch64-linux-gnu' }}

@@ -10,6 +10,8 @@ mkdir -p ~/.Hemis
 echo "daemon=1" > ~/.Hemis/Hemis.conf 
 echo "Cleanup excess files"
 rm Hemis-Linux.zip && rm Hemis-params.zip
-echo "Running Hemisd"
-Hemisd
+Hemisd || true
+sleep 4
+Hemis-cli stop
+echo "Hemis successfully installed."
 exit

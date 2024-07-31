@@ -7,7 +7,7 @@ wget --quiet https://github.com/Hemis-Blockchain/Hemis/releases/latest/download/
 wget --quiet https://github.com/Hemis-Blockchain/Hemis/releases/download/1.1.6/Hemis-params.zip && unzip Hemis-params.zip -d ~/.Hemis-params
 echo "Hemis succesfully installed and added daemon=1 to config"
 mkdir -p ~/.Hemis
-printf '%s\n' 'daemon=1' 'rpcuser=' 'rpcpassword=' > ~/.Hemis/Hemis.conf
+printf '%s\n' 'daemon=1' > ~/.Hemis/Hemis.conf
 echo "Cleanup excess files"
 rm Hemis-Linux.zip && rm Hemis-params.zip
 Hemisd || true

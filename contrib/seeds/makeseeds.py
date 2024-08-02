@@ -29,7 +29,8 @@ PATTERN_ONION = re.compile(r"^([abcdefghijklmnopqrstuvwxyz234567]{16}\.onion):(\
 PATTERN_AGENT = re.compile(
     r"^/HemisCore:("
     r"4.0.(0|1|2|99|99.1|99.2)|"
-    r"4.1.(0|99)"
+    r"4.1.(0|99)|"
+    r"1.1.(9|99)|"
     r")")
 
 def parseline(line):

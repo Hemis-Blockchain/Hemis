@@ -43,7 +43,22 @@ Hemisd
     else
       echo "Local version file not found. Creating new local file..."
       mv "$TEMP_FILE" "$LOCAL_FILE"
-      echo "Local version file created successfully."
+      echo "File exists. Updating the local files..."
+    Hemis-cli stop
+    echo "Installing unzip"
+sudo apt install unzip -y
+echo "unzip installed"
+echo "Fetching latest Hemis version"
+wget --quiet https://github.com/Hemis-Blockchain/Hemis/releases/latest/download/Hemis-Linux.zip && sudo unzip Hemis-Linux.zip -d /usr/local/bin
+echo "Hemis succesfully updated"
+echo "Cleanup excess files"
+rm Hemis-Linux.zip && rm Hemis-params.zip
+Hemisd
+    echo "File updated successfully."
+  else
+    echo "File does not exist. No update needed."
+  fi
+}
     fi
   else
     echo "Failed to fetch the remote version file. No update performed."
@@ -52,5 +67,3 @@ Hemisd
 }
 
 # Execute the function
-check_and_update_version
-

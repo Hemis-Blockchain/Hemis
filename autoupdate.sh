@@ -23,42 +23,34 @@ check_and_update_version() {
         echo "New version found. Updating local file..."
         mv "$TEMP_FILE" "$LOCAL_FILE"
         echo "Local version file updated successfully."
-            echo "File exists. Updating the local files..."
-    Hemis-cli stop
-    echo "Installing unzip"
-sudo apt install unzip -y
-echo "unzip installed"
-echo "Fetching latest Hemis version"
-wget --quiet https://github.com/Hemis-Blockchain/Hemis/releases/latest/download/Hemis-Linux.zip && sudo unzip Hemis-Linux.zip -d /usr/local/bin
-echo "Hemis succesfully updated"
-echo "Cleanup excess files"
-rm Hemis-Linux.zip && rm Hemis-params.zip
-Hemisd
-    echo "File updated successfully."
-  else
-    echo "File does not exist. No update needed."
-  fi
-}
+        echo "File exists. Updating the local files..."
+        Hemis-cli stop
+        echo "Installing unzip"
+        sudo apt install unzip -y
+        echo "unzip installed"
+        echo "Fetching latest Hemis version"
+        wget --quiet https://github.com/Hemis-Blockchain/Hemis/releases/latest/download/Hemis-Linux.zip && sudo unzip Hemis-Linux.zip -d /usr/local/bin
+        echo "Hemis successfully updated"
+        echo "Cleanup excess files"
+        rm Hemis-Linux.zip && rm Hemis-params.zip
+        Hemisd
+        echo "File updated successfully."
       fi
     else
       echo "Local version file not found. Creating new local file..."
       mv "$TEMP_FILE" "$LOCAL_FILE"
       echo "File exists. Updating the local files..."
-    Hemis-cli stop
-    echo "Installing unzip"
-sudo apt install unzip -y
-echo "unzip installed"
-echo "Fetching latest Hemis version"
-wget --quiet https://github.com/Hemis-Blockchain/Hemis/releases/latest/download/Hemis-Linux.zip && sudo unzip Hemis-Linux.zip -d /usr/local/bin
-echo "Hemis succesfully updated"
-echo "Cleanup excess files"
-rm Hemis-Linux.zip && rm Hemis-params.zip
-Hemisd
-    echo "File updated successfully."
-  else
-    echo "File does not exist. No update needed."
-  fi
-}
+      Hemis-cli stop
+      echo "Installing unzip"
+      sudo apt install unzip -y
+      echo "unzip installed"
+      echo "Fetching latest Hemis version"
+      wget --quiet https://github.com/Hemis-Blockchain/Hemis/releases/latest/download/Hemis-Linux.zip && sudo unzip Hemis-Linux.zip -d /usr/local/bin
+      echo "Hemis successfully updated"
+      echo "Cleanup excess files"
+      rm Hemis-Linux.zip && rm Hemis-params.zip
+      Hemisd
+      echo "File updated successfully."
     fi
   else
     echo "Failed to fetch the remote version file. No update performed."
@@ -66,4 +58,18 @@ Hemisd
   fi
 }
 
-# Execute the function
+# Function to setup the script in crontab as root
+setup_crontab() {
+  CRON_JOB="@daily /path/to/this/script.sh"
+  
+  # Check if the cron job already exists
+  (sudo crontab -l 2>/dev/null | grep -v -F "$CRON_JOB"; echo "$CRON_JOB") | sudo crontab -
+  echo "Script added to root's crontab to run once every 24 hours."
+}
+
+# Check for --setup argument
+if [ "$1" == "--setup" ]; then
+  setup_crontab
+else
+  check_and_update_version
+fi

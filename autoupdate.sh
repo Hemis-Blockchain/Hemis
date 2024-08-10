@@ -57,10 +57,12 @@ check_and_update_version() {
     rm "$TEMP_FILE"
   fi
 }
-
+copy_autoupdate(){
+  sudo cp ./autoupdate.sh /root/autoupdate.sh
+}
 # Function to setup the script in crontab as root
 setup_crontab() {
-  CRON_JOB="@daily /path/to/this/script.sh"
+  CRON_JOB="@daily /root/autoupdate.sh"
   
   # Check if the cron job already exists
   (sudo crontab -l 2>/dev/null | grep -v -F "$CRON_JOB"; echo "$CRON_JOB") | sudo crontab -
@@ -69,6 +71,7 @@ setup_crontab() {
 
 # Check for --setup argument
 if [ "$1" == "--setup" ]; then
+  copy_autoupdate
   setup_crontab
 else
   check_and_update_version

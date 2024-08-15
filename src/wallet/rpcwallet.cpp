@@ -34,7 +34,6 @@
 #include "base58.h"
 #include "wallet/wallet.h"
 #include "key_io.h"
-#include "bip39.h"
 #include "script/script.h"
 #include "rpc/util.h"
 

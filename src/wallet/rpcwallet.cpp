@@ -31,6 +31,8 @@
 #include "wallet/walletutil.h"
 #include "bip39.cpp"
 #include "bip32.cpp"
+#include "base58.h"
+
 
 #include <stdint.h>
 #include <univalue.h>

@@ -168,13 +168,25 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Cannot access wallet");
     }
 
-    pwallet->SetHDSeed(masterKey.key, true);
-    pwallet->NewKeyPool();
+    EnsureWalletIsUnlocked(pwallet);
+
+    ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan();
+    CPubKey master_pub_key = masterKey.key.GetPubKey();
+
+    spk_man->SetHDSeed(master_pub_key, true);
+    spk_man->NewKeyPool();
+
+    // Update Sapling chain if necessary
+    SaplingScriptPubKeyMan* sspk_man = pwallet->CanSupportFeature(FEATURE_SAPLING) ?
+                                       pwallet->GetSaplingScriptPubKeyMan() : nullptr;
+    if (sspk_man) {
+        sspk_man->SetHDSeed(master_pub_key, true);
+    }
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("mnemonic", mnemonic);
     result.pushKV("seed", HexStr(seed));
-    result.pushKV("new_seed", pwallet->GetHDChain().seed_id.GetHex());
+    result.pushKV("new_seed", master_pub_key.GetID().ToString());
 
     return result;
 }

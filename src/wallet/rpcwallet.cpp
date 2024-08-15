@@ -32,7 +32,11 @@
 #include "bip39.cpp"
 #include "bip32.cpp"
 #include "base58.h"
-
+#include "wallet/wallet.h"
+#include "key_io.h"
+#include "bip39.h"
+#include "script/script.h"
+#include "rpc/util.h"
 
 #include <stdint.h>
 #include <univalue.h>
@@ -164,7 +168,7 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
 
     // Convert the master key to a WIF key
     CKey key = masterKey.key;
-    std::string wifKey = KeyIO::EncodeSecret(key);  // Use KeyIO::EncodeSecret
+    std::string wifKey = KeyIO::EncodeSecret(key);
 
     // Set the new HD seed in the wallet
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
@@ -174,6 +178,12 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
+    // Import the private key to ensure it's recognized by the wallet
+    if (!pwallet->ImportPrivKey(key, "HD Seed", true)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Failed to import private key");
+    }
+
+    // Now set the imported key as the HD seed
     ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan();
     CPubKey master_pub_key = key.GetPubKey();
 

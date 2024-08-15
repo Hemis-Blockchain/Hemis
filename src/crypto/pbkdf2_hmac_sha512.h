@@ -37,3 +37,4 @@ void PBKDF2_HMAC_SHA512(const std::string& password, const std::string& salt, in
         }
     }
 }
+#endif // PBKDF2_HMAC_SHA512_H

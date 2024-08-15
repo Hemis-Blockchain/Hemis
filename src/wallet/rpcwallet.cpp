@@ -164,7 +164,7 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
 
     // Convert the master key to a WIF key
     CKey key = masterKey.key;
-    std::string wifKey = EncodeSecret(key);
+    std::string wifKey = KeyIO::EncodeSecret(key);  // Use KeyIO::EncodeSecret
 
     // Set the new HD seed in the wallet
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);

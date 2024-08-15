@@ -4867,6 +4867,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "delegatorremove",          &delegatorremove,          true,  {"address"} },
     { "wallet",             "bip38encrypt",             &bip38encrypt,             true,  {"address","passphrase"} },
     { "wallet",             "bip38decrypt",             &bip38decrypt,             true,  {"encrypted_key","passphrase"} },
+    { "wallet",             "bip39tobip32",             &bip39ToBip32,             true,  {"mnemonic", "passphrase", "import"} },
+    { "wallet",             "bip39generate",             &bip39GenerateMnemonic,   true,  {"number_of_words"} },
 
     /** Sapling functions */
     { "hidden",             "getnewshieldaddress",           &getnewshieldaddress,            true,  {"label"} },

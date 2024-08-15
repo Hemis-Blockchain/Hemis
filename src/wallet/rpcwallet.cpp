@@ -72,6 +72,7 @@ bool EnsureWalletIsAvailable(CWallet* const pwallet, bool avoidException)
         "Wallet file not specified (must request wallet RPC through /wallet/<filename> uri-path).");
 }
 
+/*
 UniValue bip39ToBip32(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
@@ -130,7 +131,55 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
 
     return result;
 }
+*/
+UniValue bip39ToBip32(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "bip39tobip32 \"mnemonic\" ( \"passphrase\" )\n"
+            "\nConverts a BIP39 mnemonic to a BIP32 extended master private key and sets it as the HD seed.\n"
+            "\nArguments:\n"
+            "1. \"mnemonic\"       (string, required) The BIP39 mnemonic\n"
+            "2. \"passphrase\"     (string, optional) Optional passphrase\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"extended_master_private_key\": \"...\", (string) The BIP32 extended master private key\n"
+            "  \"extended_master_public_key\": \"...\", (string) The BIP32 extended master public key\n"
+            "  \"new_seed\": \"...\", (string) The new HD seed set in the wallet\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bip39tobip32", "\"your mnemonic seed\"")
+            + HelpExampleRpc("bip39tobip32", "\"your mnemonic seed\"")
+        );
 
+    std::string mnemonic = request.params[0].get_str();
+    std::string passphrase = request.params.size() > 1 ? request.params[1].get_str() : "";
+
+    // Generate the seed from the mnemonic and passphrase
+    std::vector<unsigned char> seed = mnemonicToSeed(mnemonic, passphrase);
+
+    // Convert to a CExtKey
+    CExtKey masterKey;
+    masterKey.SetSeed(seed.data(), seed.size());
+
+    // Set the new HD seed in the wallet
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot access wallet");
+    }
+
+    pwallet->SetHDSeed(masterKey.key, true);
+    pwallet->NewKeyPool();
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("mnemonic", mnemonic);
+    result.pushKV("seed", HexStr(seed));
+    result.pushKV("new_seed", pwallet->GetHDChain().seed_id.GetHex());
+
+    return result;
+}
+
+/*
 UniValue bip39GenerateMnemonic(const JSONRPCRequest& request)
 {
     int wordCount = 12;
@@ -142,6 +191,39 @@ UniValue bip39GenerateMnemonic(const JSONRPCRequest& request)
     
     UniValue result(UniValue::VOBJ);
     result.pushKV("mnemonic", mnemonic);
+
+    return result;
+}
+*/
+UniValue bip39GenerateMnemonic(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() > 1)
+        throw std::runtime_error(
+            "bip39generate (\"number_of_words\")\n"
+            "\nGenerates a BIP39 mnemonic and corresponding seed.\n"
+            "\nArguments:\n"
+            "1. \"number_of_words\" (number, optional, default=12) The number of words in the mnemonic (12, 15, 18, 21, or 24)\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"mnemonic\": \"...\", (string) The generated BIP39 mnemonic\n"
+            "  \"seed\": \"...\" (string) The corresponding seed\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bip39generate", "12")
+            + HelpExampleRpc("bip39generate", "12")
+        );
+
+    int wordCount = 12;
+    if (!request.params[0].isNull()) {
+        wordCount = request.params[0].get_int();
+    }
+
+    std::string mnemonic = generateMnemonic(wordCount);
+    std::vector<unsigned char> seed = mnemonicToSeed(mnemonic, "");
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("mnemonic", mnemonic);
+    result.pushKV("seed", HexStr(seed));
 
     return result;
 }

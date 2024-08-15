@@ -29,6 +29,8 @@
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 #include "wallet/walletutil.h"
+#include "bip39.cpp"
+#include "bip32.cpp"
 
 #include <stdint.h>
 #include <univalue.h>
@@ -67,6 +69,56 @@ bool EnsureWalletIsAvailable(CWallet* const pwallet, bool avoidException)
     throw JSONRPCError(RPC_WALLET_NOT_SPECIFIED,
         "Wallet file not specified (must request wallet RPC through /wallet/<filename> uri-path).");
 }
+
+UniValue bip39ToBip32(const JSONRPCRequest& request)
+{
+    // Same code as before, but using the custom bip39 and bip32 functions
+    std::string mnemonic = request.params[0].get_str();
+    std::string passphrase = (request.params.size() > 1) ? request.params[1].get_str() : "";
+
+    // Generate BIP39 seed from mnemonic and passphrase
+    std::vector<unsigned char> seed = mnemonicToSeed(mnemonic, passphrase);
+
+    // Generate BIP32 extended master private key
+    CExtKey masterKey;
+    masterKey.SetMaster(seed.data(), seed.size());
+
+    // Generate BIP32 extended master public key
+    CExtPubKey masterPubKey;
+    masterPubKey.SetKey(masterKey);
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("extended_master_private_key", masterKey.ToString());
+    result.pushKV("extended_master_public_key", masterPubKey.ToString());
+
+    // Optional: Import the extended master private key into the wallet
+    if (request.params.size() > 2 && request.params[2].get_bool()) {
+        if (!pwalletMain->HaveKey(masterKey.key.GetPubKey().GetID())) {
+            pwalletMain->AddKey(masterKey.key);
+            result.pushKV("imported_to_wallet", true);
+        } else {
+            result.pushKV("imported_to_wallet", false);
+        }
+    }
+
+    return result;
+}
+
+UniValue bip39GenerateMnemonic(const JSONRPCRequest& request)
+{
+    int wordCount = 12;
+    if (request.params.size() > 0) {
+        wordCount = request.params[0].get_int();
+    }
+
+    std::string mnemonic = generateMnemonic(wordCount);
+    
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("mnemonic", mnemonic);
+
+    return result;
+}
+
 
 void EnsureWalletIsUnlocked(CWallet* const pwallet, bool fAllowAnonOnly)
 {

@@ -35,7 +35,7 @@
 #include "wallet/wallet.h"
 #include "key_io.h"
 #include "script/script.h"
-#include "wallet/reserve.h"
+
 
 #include <stdint.h>
 #include <univalue.h>

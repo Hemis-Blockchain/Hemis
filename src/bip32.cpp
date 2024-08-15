@@ -1,19 +1,20 @@
-#include <openssl/hmac.h>
+#include "crypto/hmac_sha512.h"
 #include <vector>
 #include <string>
 #include <cstring>
 #include <stdexcept>
 #include "key.h"
+#include "base58.h"
 
 // BIP32 extended master private key structure
 class CExtKey {
 public:
-    unsigned char vch[74]; // Serialized key data
+    unsigned char vch[74];
 
-    // Initialize the key from a seed
     void SetMaster(const unsigned char* seed, unsigned int nSeedLen) {
         unsigned char I[64];
-        HMAC(EVP_sha512(), "Bitcoin seed", 12, seed, nSeedLen, I, nullptr);
+        // Use the custom CHMAC_SHA512 class instead of OpenSSL's HMAC
+        CHMAC_SHA512((const unsigned char*)"Bitcoin seed", 12).Write(seed, nSeedLen).Finalize(I);
 
         memcpy(vch, I, 32); // Private key
         memcpy(vch + 32, I + 32, 32); // Chain code

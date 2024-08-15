@@ -1,5 +1,5 @@
 #include "bip39_wordlist.h"
-#include <openssl/sha.h>
+#include "crypto/sha256.h"
 #include <vector>
 #include <string>
 #include <sstream>
@@ -16,11 +16,11 @@ std::string binaryToHex(const std::string& binary) {
     return oss.str();
 }
 
-// Helper function to compute SHA-256 hash
 std::string sha256(const std::string& data) {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256((unsigned char*)data.c_str(), data.size(), hash);
-    return std::string((char*)hash, SHA256_DIGEST_LENGTH);
+    CSHA256 sha256;
+    unsigned char hash[CSHA256::OUTPUT_SIZE];
+    sha256.Write((const unsigned char*)data.data(), data.size()).Finalize(hash);
+    return std::string((char*)hash, CSHA256::OUTPUT_SIZE);
 }
 
 // Generate a BIP39 mnemonic

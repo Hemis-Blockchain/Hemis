@@ -72,7 +72,23 @@ bool EnsureWalletIsAvailable(CWallet* const pwallet, bool avoidException)
 
 UniValue bip39ToBip32(const JSONRPCRequest& request)
 {
-    // Same code as before, but using the custom bip39 and bip32 functions
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "bip39tobip32 \"mnemonic\" ( passphrase )\n"
+            "\nConverts a BIP39 mnemonic seed to a BIP32 extended master private key.\n"
+            "\nArguments:\n"
+            "1. \"mnemonic\"       (string, required) The BIP39 mnemonic seed\n"
+            "2. \"passphrase\"     (string, optional) Optional passphrase for seed derivation\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"extended_master_private_key\": \"...\", (string) The BIP32 extended master private key\n"
+            "  \"extended_master_public_key\": \"...\",  (string) The BIP32 extended master public key\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bip39tobip32", "\"your mnemonic seed\" \"your passphrase\"")
+            + HelpExampleRpc("bip39tobip32", "\"your mnemonic seed\", \"your passphrase\"")
+        );
+
     std::string mnemonic = request.params[0].get_str();
     std::string passphrase = (request.params.size() > 1) ? request.params[1].get_str() : "";
 
@@ -81,24 +97,33 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
 
     // Generate BIP32 extended master private key
     CExtKey masterKey;
-    masterKey.SetMaster(seed.data(), seed.size());
+    masterKey.SetSeed(seed.data(), seed.size());
 
     // Generate BIP32 extended master public key
-    CExtPubKey masterPubKey;
-    masterPubKey.SetKey(masterKey);
+    CExtPubKey masterPubKey = masterKey.Neuter();
+
+    unsigned char extKey[BIP32_EXTKEY_SIZE];
+    masterKey.Encode(extKey);
+    std::string extPrivKey = EncodeBase58(extKey, extKey + BIP32_EXTKEY_SIZE);
+
+    masterPubKey.Encode(extKey);
+    std::string extPubKey = EncodeBase58(extKey, extKey + BIP32_EXTKEY_SIZE);
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("extended_master_private_key", masterKey.ToString());
-    result.pushKV("extended_master_public_key", masterPubKey.ToString());
+    result.pushKV("extended_master_private_key", extPrivKey);
+    result.pushKV("extended_master_public_key", extPubKey);
 
     // Optional: Import the extended master private key into the wallet
-    if (request.params.size() > 2 && request.params[2].get_bool()) {
-        if (!pwalletMain->HaveKey(masterKey.key.GetPubKey().GetID())) {
-            pwalletMain->AddKey(masterKey.key);
-            result.pushKV("imported_to_wallet", true);
-        } else {
-            result.pushKV("imported_to_wallet", false);
-        }
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot access wallet");
+    }
+
+    if (!pwallet->HaveKey(masterKey.key.GetPubKey().GetID())) {
+        pwallet->AddKey(masterKey.key);
+        result.pushKV("imported_to_wallet", true);
+    } else {
+        result.pushKV("imported_to_wallet", false);
     }
 
     return result;

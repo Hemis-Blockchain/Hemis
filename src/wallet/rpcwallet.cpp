@@ -162,6 +162,10 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
     CExtKey masterKey;
     masterKey.SetSeed(seed.data(), seed.size());
 
+    // Convert the master key to a WIF key
+    CKey key = masterKey.key;
+    std::string wifKey = EncodeSecret(key);
+
     // Set the new HD seed in the wallet
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) {
@@ -171,7 +175,7 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
 
     ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan();
-    CPubKey master_pub_key = masterKey.key.GetPubKey();
+    CPubKey master_pub_key = key.GetPubKey();
 
     spk_man->SetHDSeed(master_pub_key, true);
     spk_man->NewKeyPool();
@@ -186,11 +190,10 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
     UniValue result(UniValue::VOBJ);
     result.pushKV("mnemonic", mnemonic);
     result.pushKV("seed", HexStr(seed));
-    result.pushKV("new_seed", master_pub_key.GetID().ToString());
+    result.pushKV("new_seed", wifKey);
 
     return result;
 }
-
 /*
 UniValue bip39GenerateMnemonic(const JSONRPCRequest& request)
 {
@@ -225,9 +228,18 @@ UniValue bip39GenerateMnemonic(const JSONRPCRequest& request)
             + HelpExampleRpc("bip39generate", "12")
         );
 
-    int wordCount = 12;
+    int wordCount = 12;  // Default to 12 words
+
     if (!request.params[0].isNull()) {
-        wordCount = request.params[0].get_int();
+        if (request.params[0].isNum()) {
+            wordCount = request.params[0].get_int();
+        } else {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid number_of_words parameter; must be an integer.");
+        }
+    }
+
+    if (wordCount != 12 && wordCount != 15 && wordCount != 18 && wordCount != 21 && wordCount != 24) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid number_of_words; must be one of 12, 15, 18, 21, or 24.");
     }
 
     std::string mnemonic = generateMnemonic(wordCount);
@@ -239,6 +251,7 @@ UniValue bip39GenerateMnemonic(const JSONRPCRequest& request)
 
     return result;
 }
+
 
 
 void EnsureWalletIsUnlocked(CWallet* const pwallet, bool fAllowAnonOnly)

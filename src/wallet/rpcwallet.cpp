@@ -35,7 +35,7 @@
 #include "wallet/wallet.h"
 #include "key_io.h"
 #include "script/script.h"
-
+#include "wallet/reserve.h"
 
 #include <stdint.h>
 #include <univalue.h>
@@ -177,23 +177,34 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
-    // Import the private key to ensure it's recognized by the wallet
-    if (!pwallet->ImportPrivKey(key, "HD Seed", true)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Failed to import private key");
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    pwallet->MarkDirty();
+
+    CPubKey pubkey = key.GetPubKey();
+    assert(key.VerifyPubKey(pubkey));
+    CKeyID vchAddress = pubkey.GetID();
+
+    pwallet->SetAddressBook(vchAddress, "HD Seed", AddressBook::AddressBookPurpose::RECEIVE);
+
+    if (!pwallet->HaveKey(vchAddress)) {
+        pwallet->UpdateTimeFirstKey(1);
+        pwallet->mapKeyMetadata[vchAddress].nCreateTime = 1;
+
+        if (!pwallet->AddKeyPubKey(key, pubkey)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
+        }
     }
 
-    // Now set the imported key as the HD seed
     ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan();
-    CPubKey master_pub_key = key.GetPubKey();
-
-    spk_man->SetHDSeed(master_pub_key, true);
+    spk_man->SetHDSeed(pubkey, true);
     spk_man->NewKeyPool();
 
     // Update Sapling chain if necessary
     SaplingScriptPubKeyMan* sspk_man = pwallet->CanSupportFeature(FEATURE_SAPLING) ?
                                        pwallet->GetSaplingScriptPubKeyMan() : nullptr;
     if (sspk_man) {
-        sspk_man->SetHDSeed(master_pub_key, true);
+        sspk_man->SetHDSeed(pubkey, true);
     }
 
     UniValue result(UniValue::VOBJ);

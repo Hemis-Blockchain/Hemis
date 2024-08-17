@@ -35,11 +35,42 @@
 #include "wallet/wallet.h"
 #include "key_io.h"
 #include "script/script.h"
-
+#include "simpleroi.h"
 
 #include <stdint.h>
 #include <univalue.h>
 
+UniValue getroi(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() > 0) {
+        int nRoiMinutes = Params().GetConsensus().nTargetTimespan;     // defalut if no Tip()
+        CSimpRoiArgs csra;
+        CBlockIndex * pb = chainActive.Tip();
+        if (pb && pb->nHeight) {
+            nRoiMinutes = Params().GetConsensus().TargetTimespan(pb->nHeight);
+        }
+        std::string sTopline = strprintf("  \"%d hour avg ROI: nnnn.n%%\",           smoothed staking ROI\n", csra.nStakeRoiHrs);
+        std::string sLine2   = strprintf("  \"%2d min stk ROI: nnnn.n%%\",           real time staking ROI\n", nRoiMinutes / 60);
+            throw std::runtime_error(
+                "getroi\n" +
+                sTopline +
+                sLine2 +
+                "  \"tot stake coin: nnnnnnnn\",          estimate of total staked coins\n"
+                "\n"
+                "  \"masternode ROI: nnnn.n%\",           masternode ROI\n"
+                "  \"tot collateral: nnnnnnnn\",          total masternode collateral\n"
+                "  \"enabled  nodes: nnnn\",              number of enabled masternodes\n"
+                "  \"blocks per day: nnnn.n\",            number of blocks per day\n"
+                "\n"
+            );
+    }
+    CSimpleRoi csimproi;
+    UniValue roi(UniValue::VOBJ);
+    std::string sGerror;
+
+    if (csimproi.generateROI(roi, sGerror)) return roi;
+    throw std::runtime_error(sGerror);
+}
 
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
@@ -4996,6 +5027,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "bip38decrypt",             &bip38decrypt,             true,  {"encrypted_key","passphrase"} },
     { "wallet",             "bip39tobip32",             &bip39ToBip32,             true,  {"mnemonic", "passphrase", "import"} },
     { "wallet",             "bip39generate",             &bip39GenerateMnemonic,   true,  {"number_of_words"} },
+    { "wallet",             "getroi",                   &getroi,                   false, {} },
 
     /** Sapling functions */
     { "hidden",             "getnewshieldaddress",           &getnewshieldaddress,            true,  {"label"} },

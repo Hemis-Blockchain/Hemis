@@ -186,11 +186,14 @@ static bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev,
         if (!view->GetUTXOCoin(pl.collateralOutpoint, coin)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
         }
-        for (auto txIn= tx.vin.begin();txIN<tx.vin.end();txIn++){
-            if(txIn->prevout == pl.collateralOutput){
-                return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-used-as-input")
-                }
+
+        //Don't use the collateral as tx input of the proreg
+        for(auto txIn= tx.vin.begin();txIn<tx.vin.end();txIn++){
+            if(txIn->prevout == pl.collateralOutpoint){
+                return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-used-as-input");
             }
+        }
+
         CTxDestination collateralTxDest;
         if (!CheckCollateralOut(coin.out, pl, state, collateralTxDest)) {
             // pass the state returned by the function above

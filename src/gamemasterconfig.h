@@ -29,11 +29,11 @@ public:
     public:
         CGamemasterEntry(std::string& _alias,
                          std::string& _ip,
-                         std::string& _privKey,
+                         std::string& _privKeyStr,
                          std::string& _pubKeyStr,
                          std::string& _txHash,
                          std::string& _outputIndex) :
-            alias(_alias), ip(_ip), privKeyStr_privKeyStr), pubKeyStr(_pubKeyStr), txHash(_txHash), outputIndex(_outputIndex) { }
+            alias(_alias), ip(_ip), privKeyStr(_privKeyStr), pubKeyStr(_pubKeyStr), txHash(_txHash), outputIndex(_outputIndex) { }
 
         std::string& getAlias() const { return alias; }
         std::string& getOutputIndex() const { return outputIndex; }

@@ -5,16 +5,21 @@
 #include "gamemasterconfig.h"
 
 #include "fs.h"
+#include "key_io.h"
 #include "netbase.h"
 #include "util/system.h"
-#include "guiinterface.h"
-#include <base58.h>
 
 CGamemasterConfig gamemasterConfig;
 
-CGamemasterConfig::CGamemasterEntry* CGamemasterConfig::add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex)
+CGamemasterConfig::CGamemasterEntry* CGamemasterConfig::add(std::string alias,
+
+                                                            std::string ip,
+                                                            std::string privKeyStr,
+                                                            std::string pubKeyStr,
+                                                            std::string txHash,
+                                                            std::string outputIndex)
 {
-    CGamemasterEntry cme(alias, ip, privKey, txHash, outputIndex);
+    CGamemasterEntry cme(alias, ip, privKeyStr, pubKeyStr, txHash, outputIndex);
     entries.push_back(cme);
     return &(entries[entries.size()-1]);
 }
@@ -93,9 +98,16 @@ bool CGamemasterConfig::read(std::string& strErr)
             streamConfig.close();
             return false;
         }
+        CKey secretKey = KeyIO::DecodeSecret(privKey);
+        if (!secretKey.IsValid()) {
+            strErr = _("Invalid private key in gamemaster.conf") + "\n" +
+                     strprintf(_("Line: %d"), linenumber) + "\n\"" + line + "\"";
+            streamConfig.close();
+            return false;
+        }
 
 
-        add(alias, ip, privKey, txHash, outputIndex);
+        add(alias, ip, privKey, secretKey.GetPubKey().GetHash().GetHex(), txHash, outputIndex);
     }
 
     streamConfig.close();

@@ -191,6 +191,7 @@ BITCOIN_CORE_H = \
   evo/evonotificationinterface.h \
   evo/providertx.h \
   evo/specialtx_validation.h \
+  evo/specialtx_utils.h \
   flatdb.h \
   llmq/quorums.h \
   llmq/quorums_blockprocessor.h \
@@ -218,6 +219,7 @@ BITCOIN_CORE_H = \
   init.h \
   tiertwo/init.h \
   interfaces/handler.h \
+  interfaces/tiertwo.h \
   interfaces/wallet.h \
   invalid.h \
   invalid_outpoints.json.h \
@@ -375,6 +377,7 @@ libbitcoin_server_a_SOURCES = \
   evo/gmauth.cpp \
   evo/providertx.cpp \
   evo/specialtx_validation.cpp \
+  evo/specialtx_utils.cpp \
   llmq/quorums.cpp \
   llmq/quorums_blockprocessor.cpp \
   llmq/quorums_chainlocks.cpp \
@@ -609,6 +612,7 @@ libbitcoin_util_a_SOURCES = \
   compat/strnlen.cpp \
   fs.cpp \
   interfaces/handler.cpp \
+  interfaces/tiertwo.cpp \
   logging.cpp \
   random.cpp \
   randomenv.cpp \

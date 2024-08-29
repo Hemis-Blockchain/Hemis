@@ -16,38 +16,79 @@ GmInfoDialog::GmInfoDialog(QWidget *parent) :
     this->setStyleSheet(parent->styleSheet());
     setCssProperty(ui->frame, "container-dialog");
     setCssProperty(ui->labelTitle, "text-title-dialog");
-    setCssTextBodyDialog({ui->labelAmount, ui->labelSend, ui->labelInputs, ui->labelFee, ui->labelId});
-    setCssProperty({ui->labelDivider1, ui->labelDivider4, ui->labelDivider6, ui->labelDivider7, ui->labelDivider8, ui->labelDivider9}, "container-divider");
-    setCssTextBodyDialog({ui->textAmount, ui->textAddress, ui->textInputs, ui->textStatus, ui->textId, ui->textExport});
-    setCssProperty({ui->pushCopy, ui->pushCopyId, ui->pushExport}, "ic-copy-big");
+    setCssTextBodyDialog({ui->labelAmount, ui->labelSend, ui->labelInputs, ui->labelFee, ui->labelId,
+                          ui->labelOwnerPayoutAddr, ui->labelOperatorPubKey, ui->labelOperatorSk, ui->labelVoterAddr});
+    setCssProperty({ui->labelDivider1, ui->labelDivider4, ui->labelDivider6, ui->labelDivider7,
+                    ui->labelDivider8, ui->labelDivider9, ui->labelDivider10, ui->labelDivider11,
+                    ui->labelDivider12, ui->labelDivider13}, "container-divider");
+    setCssTextBodyDialog({ui->textAmount, ui->textAddress, ui->textInputs, ui->textStatus,
+                          ui->textId, ui->textExport, ui->textOwnerPayoutAddr, ui->textOperatorPubKey, ui->textOperatorSk,
+                          ui->textVoterAddr});
+    setCssProperty({ui->pushCopy, ui->pushCopyId, ui->pushExport, ui->pushCopyOwnerPayoutAddr,
+                    ui->pushCopyOperatorPubKey, ui->pushCopyOperatorSk, ui->pushCopyVoterAddr}, "ic-copy-big");
     setCssProperty(ui->btnEsc, "ic-close");
     connect(ui->btnEsc, &QPushButton::clicked, this, &GmInfoDialog::close);
-    connect(ui->pushCopy, &QPushButton::clicked, [this](){ copyInform(pubKey, tr("Gamemaster public key copied")); });
+    connect(ui->pushCopy, &QPushButton::clicked, [this](){
+        if (dgmData) copyInform(QString::fromStdString(dgmData->ownerMainAddr), tr("Gamemaster owner address copied"));
+        else copyInform(pubKey, tr("Gamemaster public key copied"));
+    });
     connect(ui->pushCopyId, &QPushButton::clicked, [this](){ copyInform(txId, tr("Collateral tx id copied")); });
     connect(ui->pushExport, &QPushButton::clicked, [this](){ exportGM = true; accept(); });
+    connect(ui->pushCopyOperatorPubKey, &QPushButton::clicked, [this](){
+        if (dgmData) copyInform(QString::fromStdString(dgmData->operatorPk), tr("Operator public key copied"));
+    });
+    connect(ui->pushCopyOperatorSk, &QPushButton::clicked, [this](){
+        if (dgmData) copyInform(QString::fromStdString(dgmData->operatorSk), tr("Operator secret key copied"));
+    });
+    connect(ui->pushCopyOwnerPayoutAddr, &QPushButton::clicked, [this](){
+        if (dgmData) copyInform(QString::fromStdString(dgmData->ownerPayoutAddr), tr("Owner payout script copied"));
+    });
+    connect(ui->pushCopyVoterAddr, &QPushButton::clicked, [this](){
+        if (dgmData) copyInform(QString::fromStdString(dgmData->votingAddr), tr("Voter address copied"));
+    });
 }
 
-void GmInfoDialog::setData(const QString& _pubKey, const QString& name, const QString& address, const QString& _txId, const QString& outputIndex, const QString& status)
+void GmInfoDialog::setDGMDataVisible(bool show)
+    ui->contentOwnerPayoutAddr->setVisible(show);
+    ui->contentOperatorPubKey->setVisible(show);
+    ui->contentOperatorSk->setVisible(show);
+    ui->contentVoterAddr->setVisible(show);
+    ui->labelDivider9->setVisible(show);
+    ui->labelDivider11->setVisible(show);
+    ui->labelDivider12->setVisible(show);
+    ui->labelDivider13->setVisible(show);
+}
+
+void GmInfoDialog::setData(const QString& _pubKey,
+                           const QString& name,
+                           const QString& address,
+                           const QString& _txId,
+                           const QString& outputIndex,
+                           const QString& status,
+                           const Optional<DGMData>& _dgmData)
 {
-    this->pubKey = _pubKey;
-    this->txId = _txId;
-    QString shortPubKey = _pubKey;
-    QString shortTxId = _txId;
-    QString shortAddress = address;
-    if (shortPubKey.length() > 20) {
-        shortPubKey = shortPubKey.left(13) + "..." + shortPubKey.right(13);
-    }
-    if (shortTxId.length() > 20) {
-        shortTxId = shortTxId.left(12) + "..." + shortTxId.right(12);
-    }
-    if (shortAddress.length() >= 40) {
-        shortAddress = shortAddress.left(11) + "..." + shortAddress.right(20);
-    }
-    ui->textId->setText(shortPubKey);
-    ui->textAddress->setText(shortAddress);
-    ui->textAmount->setText(shortTxId);
+    pubKey = _pubKey;
+    txId = _txId;
+    setShortTextIfExceedSize(ui->textId, _pubKey, 13, 20);
+    setShortTextIfExceedSize(ui->textAmount, _txId, 12, 20);
+    setShortTextIfExceedSize(ui->textAddress, address, 12, 40);
     ui->textInputs->setText(outputIndex);
     ui->textStatus->setText(status);
+
+    dgmData = _dgmData;
+    if (dgmData) {
+        setDGMDataVisible(true);
+        ui->labelId->setText(tr("Owner Address"));
+        setShortText(ui->textId, QString::fromStdString(dgmData->ownerMainAddr), 15);
+        setShortText(ui->textOwnerPayoutAddr, QString::fromStdString(dgmData->ownerPayoutAddr), 15);
+        setShortText(ui->textVoterAddr, QString::fromStdString(dgmData->votingAddr), 15);
+        setShortTextIfExceedSize(ui->textOperatorPubKey, QString::fromStdString(dgmData->operatorPk), 12, 20);
+        if (!dgmData->operatorSk.empty())
+            setShortTextIfExceedSize(ui->textOperatorSk, QString::fromStdString(dgmData->operatorSk), 12, 20);
+    } else {
+        ui->labelId->setText(tr("Public Key"));
+        setDGMDataVisible(false);
+    }
 }
 
 void GmInfoDialog::copyInform(const QString& copyStr, const QString& message)

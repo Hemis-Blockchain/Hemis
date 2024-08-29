@@ -3,9 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "qt/Hemis/gamemasterswidget.h"
+#include "bls/bls_wrapper.h"
 #include "coincontrol.h"
 #include "qt/Hemis/forms/ui_gamemasterswidget.h"
 
+#include "qt/pivx/defaultdialog.h"
 #include "qt/Hemis/qtutils.h"
 #include "qt/Hemis/gmrow.h"
 #include "qt/Hemis/gminfodialog.h"
@@ -13,9 +15,11 @@
 
 #include "clientmodel.h"
 #include "guiutil.h"
+#include "interfaces/tiertwo.h"
 #include "qt/Hemis/gmmodel.h"
 #include "qt/Hemis/optionbutton.h"
 #include "qt/walletmodel.h"
+#include "uint256.h"
 
 #define DECORATION_SIZE 65
 #define NUM_ITEMS 3
@@ -40,7 +44,8 @@ public:
         QString address = index.sibling(index.row(), GMModel::ADDRESS).data(Qt::DisplayRole).toString();
         QString status = index.sibling(index.row(), GMModel::STATUS).data(Qt::DisplayRole).toString();
         bool wasCollateralAccepted = index.sibling(index.row(), GMModel::WAS_COLLATERAL_ACCEPTED).data(Qt::DisplayRole).toBool();
-        row->updateView("Address: " + address, label, status, wasCollateralAccepted);
+        uint8_t type = index.sibling(index.row(), GMModel::TYPE).data(Qt::DisplayRole).toUInt();
+        row->updateView("Address: " + address, label, status, wasCollateralAccepted, type);
     }
 
     QColor rectColor(bool isHovered, bool isSelected) override
@@ -120,10 +125,16 @@ GameMastersWidget::GameMastersWidget(HemisGUI *parent) :
 
 void GameMastersWidget::showEvent(QShowEvent *event)
 {
-    if (gmModel) gmModel->updateGMList();
+    if (!gmModel) return;
+    const auto& updateList = [&](){
+        mnModel->updateGMList();
+        updateListState();
+    };
+    updateList();
+
     if (!timer) {
         timer = new QTimer(this);
-        connect(timer, &QTimer::timeout, [this]() {gmModel->updateGMList();});
+        connect(timer, &QTimer::timeout, updateList);
     }
     timer->start(30000);
 }
@@ -154,22 +165,22 @@ void GameMastersWidget::onGMClicked(const QModelIndex& _index)
     ui->listGm->setCurrentIndex(_index);
     QRect rect = ui->listGm->visualRect(_index);
     QPoint pos = rect.topRight();
-    pos.setX(pos.x() - (DECORATION_SIZE * 2));
-    pos.setY(pos.y() + (DECORATION_SIZE * 1.5));
-    if (!this->menu) {
-        this->menu = new TooltipMenu(window, this);
-        this->menu->setEditBtnText(tr("Start"));
-        this->menu->setDeleteBtnText(tr("Delete"));
-        this->menu->setCopyBtnText(tr("Info"));
-        connect(this->menu, &TooltipMenu::message, this, &AddressesWidget::message);
-        connect(this->menu, &TooltipMenu::onEditClicked, this, &GameMastersWidget::onEditGMClicked);
-        connect(this->menu, &TooltipMenu::onDeleteClicked, this, &GameMastersWidget::onDeleteGMClicked);
-        connect(this->menu, &TooltipMenu::onCopyClicked, this, &GameMastersWidget::onInfoGMClicked);
-        this->menu->adjustSize();
+    pos.setX((int) pos.x() - (DECORATION_SIZE * 2));
+    pos.setY((int) pos.y() + (DECORATION_SIZE * 1.5));
+    if (!menu) {
+        menu = new TooltipMenu(window, this);
+        connect(menu, &TooltipMenu::message, this, &AddressesWidget::message);
+        menu->addBtn(0, tr("Start"), [this](){onEditGMClicked();}); //TODO: change to UNBAN once 6.0 is out
+        menu->addBtn(1, tr("Delete"), [this](){onDeleteGMClicked();});
+        menu->addBtn(2, tr("Info"), [this](){onInfoGMClicked();});
+        menu->adjustSize();
+
     } else {
-        this->menu->hide();
+        menu->hide();
     }
-    this->index = _index;
+    index = _index;
+    uint8_t gmType = index.sibling(index.row(), GMModel::TYPE).data(Qt::DisplayRole).toUInt();
+    menu->showHideBtn(0, mnType == GMViewType::LEGACY);
     menu->move(pos);
     menu->show();
 
@@ -190,25 +201,57 @@ void GameMastersWidget::onEditGMClicked()
 {
     if (walletModel) {
         if (!walletModel->isRegTestNetwork() && !checkGMsNetwork()) return;
-        if (index.sibling(index.row(), GMModel::WAS_COLLATERAL_ACCEPTED).data(Qt::DisplayRole).toBool()) {
-            // Start GM
-            QString strAlias = this->index.data(Qt::DisplayRole).toString();
-            if (ask(tr("Start Gamemaster"), tr("Are you sure you want to start gamemaster %1?\n").arg(strAlias))) {
-                WalletModel::UnlockContext ctx(walletModel->requestUnlock());
-                if (!ctx.isValid()) {
-                    // Unlock wallet was cancelled
-                    inform(tr("Cannot edit gamemaster, wallet locked"));
-                    return;
-                }
-                startAlias(strAlias);
+        uint8_t gmType = index.sibling(index.row(), GMModel::TYPE).data(Qt::DisplayRole).toUInt();
+        if (gmType == GMViewType::LEGACY) {
+            if (index.sibling(index.row(), GMModel::WAS_COLLATERAL_ACCEPTED).data(Qt::DisplayRole).toBool()) {
+                // Start MN
+                QString strAlias = this->index.data(Qt::DisplayRole).toString();
+                if (ask(tr("Start Gamemaster"), tr("Are you sure you want to start gamemaster %1?\n").arg(strAlias))) {
+                    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+                    if (!ctx.isValid()) {
+                        // Unlock wallet was cancelled
+                        inform(tr("Cannot edit gamemaster, wallet locked"));
+                        return;
+                    }
+                    startAlias(strAlias);
             }
         } else {
             inform(tr("Cannot start gamemaster, the collateral transaction has not been confirmed by the network yet.\n"
                     "Please wait few more minutes (gamemaster collaterals require %1 confirmations).").arg(gmModel->getGamemasterCollateralMinConf()));
+
+        } else {
+            // Deterministic
+            bool isEnabled = index.sibling(index.row(), GMModel::IS_POSE_ENABLED).data(Qt::DisplayRole).toBool();
+            if (isEnabled) {
+                inform(tr("Cannot start an already started Gamemaster"));
+            } else {
+                uint256 proTxHash = uint256S(index.sibling(index.row(), GMModel::PRO_TX_HASH).data(Qt::DisplayRole).toString().toStdString());
+                Optional<DGMData> opDGM = interfaces::g_tiertwo->getDGMData(proTxHash,
+                    clientModel->getLastBlockIndexProcessed());
+                if (!opDGM) {
+                    inform(tr("Gamemaster not found"));
+                } else {
+                    std::string operatorKeyS = opDGM->operatorSk;
+                    if (operatorKeyS.empty()) {
+                        inform("Operator secret key not found");
+                    } else {
+                        Optional<CBLSSecretKey> operator_key = bls::DecodeSecret(Params(), operatorKeyS);
+                        if (operator_key) {
+                            std::string error_str = "";
+                            if (!gmModel->unbanDGM(*operator_key, proTxHash, error_str)) {
+                                inform(QString::fromStdString(error_str));
+                            } else {
+                                inform("Gamemaster successfully unbanned! Wait for the next minted block and it will update");
+                            }
+                        } else {
+                            inform("Could not decode operator secret key");
+                        }
+                    }
+                }
+            }
         }
     }
 }
-
 void GameMastersWidget::startAlias(const QString& strAlias)
 {
     QString strStatusHtml;
@@ -303,24 +346,45 @@ void GameMastersWidget::onInfoGMClicked()
     QString txId = index.sibling(index.row(), GMModel::COLLATERAL_ID).data(Qt::DisplayRole).toString();
     QString outIndex = index.sibling(index.row(), GMModel::COLLATERAL_OUT_INDEX).data(Qt::DisplayRole).toString();
     QString pubKey = index.sibling(index.row(), GMModel::PUB_KEY).data(Qt::DisplayRole).toString();
-    dialog->setData(pubKey, label, address, txId, outIndex, status);
+    bool isLegacy = ((uint8_t) index.sibling(index.row(), GMModel::TYPE).data(Qt::DisplayRole).toUInt()) == GMViewType::LEGACY;
+    Optional<DGMData> opDGM = nullopt;
+    if (!isLegacy) {
+        QString proTxHash = index.sibling(index.row(), GMModel::PRO_TX_HASH).data(Qt::DisplayRole).toString();
+        opDGM = interfaces::g_tiertwo->getDGMData(uint256S(proTxHash.toStdString()),
+                                                  clientModel->getLastBlockIndexProcessed());
+    }
+    dialog->setData(pubKey, label, address, txId, outIndex, status, opDGM);
     dialog->adjustSize();
-    showDialog(dialog, 3, 17);
+    showDialog(dialog, 3, 17);    bool isLegacy = ((uint8_t) index.sibling(index.row(), MNModel::TYPE).data(Qt::DisplayRole).toUInt()) == MNViewType::LEGACY;
+                                  Optional<DMNData> opDMN = nullopt;
+                                  if (!isLegacy) {
+                                      QString proTxHash = index.sibling(index.row(), MNModel::PRO_TX_HASH).data(Qt::DisplayRole).toString();
+                                      opDMN = interfaces::g_tiertwo->getDMNData(uint256S(proTxHash.toStdString()),
+                                                                                clientModel->getLastBlockIndexProcessed());
+                                  }
+                                  dialog->setData(pubKey, label, address, txId, outIndex, status, opDMN);
     if (dialog->exportGM) {
+        QString legacyText = isLegacy ? tr(" Then start the Gamemaster using\nthis controller wallet (select the Gamemaster in the list and press \"start\").") : "";
         if (ask(tr("Remote Gamemaster Data"),
                 tr("You are just about to export the required data to run a Gamemaster\non a remote server to your clipboard.\n\n\n"
-                   "You will only have to paste the data in the Hemis.conf file\nof your remote server and start it, "
-                   "then start the Gamemaster using\nthis controller wallet (select the Gamemaster in the list and press \"start\").\n"
-                ))) {
+                   "You will only have to paste the data in the Hemis.conf file\nof your remote server and start it."
+                   "%1\n").arg(legacyText))) {
             // export data
             QString exportedGM = "gamemaster=1\n"
-                                 "externalip=" + address.left(address.lastIndexOf(":")) + "\n" +
-                                 "gamemasteraddr=" + address + + "\n" +
-                                 "gamemasterprivkey=" + index.sibling(index.row(), GMModel::PRIV_KEY).data(Qt::DisplayRole).toString() + "\n";
-            GUIUtil::setClipboard(exportedGM);
+                                 "externalip=" + address.left(address.lastIndexOf(":")) + "\n"
+                                 "listen=1\n";
+            if (isLegacy) {
+                exportedGM += "gamemasteraddr=" + address + +"\n" +
+                             "gamemasterprivkey=" +
+                             index.sibling(index.row(), GMModel::PRIV_KEY).data(Qt::DisplayRole).toString() + "\n";
+            } else {
+                exportedGM += "gmoperatorprivatekey=" + QString::fromStdString(opDGM->operatorSk.empty() ? "<insert operator private key here>" : opDGM->operatorSk) + "\n";
+            }
+            GUIUtil::setClipboard(exportedMN);
             inform(tr("Gamemaster data copied to the clipboard."));
         }
     }
+
 
     dialog->deleteLater();
 }
@@ -330,6 +394,7 @@ void GameMastersWidget::onDeleteGMClicked()
     QString txId = index.sibling(index.row(), GMModel::COLLATERAL_ID).data(Qt::DisplayRole).toString();
     QString outIndex = index.sibling(index.row(), GMModel::COLLATERAL_OUT_INDEX).data(Qt::DisplayRole).toString();
     QString qAliasString = index.data(Qt::DisplayRole).toString();
+    bool isLegacy = ((uint8_t) index.sibling(index.row(), GMModel::TYPE).data(Qt::DisplayRole).toUInt()) == GMViewType::LEGACY;
 
     bool convertOK = false;
     unsigned int indexOut = outIndex.toUInt(&convertOK);
@@ -338,18 +403,33 @@ void GameMastersWidget::onDeleteGMClicked()
         return;
     }
 
-    if (!ask(tr("Delete Gamemaster"), tr("You are just about to delete Gamemaster:\n%1\n\nAre you sure?").arg(qAliasString))) {
-        return;
-    }
+    if (isLegacy) {
+        if (!ask(tr("Delete Gamemaster"), tr("You are just about to delete Gamemaster:\n%1\n\nAre you sure?").arg(qAliasString))) {
+            return;
+        }
+        QString errorStr;
+        if (!gmModel->removeLegacyGM(qAliasString.toStdString(), txId.toStdString(), indexOut, errorStr)) {
+            inform(errorStr);
+            return;
+        }
+        // Update list
+        gmModel->removeGm(index);
+        updateListState();
+    } else {
+        if (!ask(tr("Delete Gamemaster"), tr("You are just about to spend the collateral\n"
+                                             "(creating a transaction to yourself)\n"
+                                             "of your Gamemaster:\n\n%1\n\nAre you sure?")
+            .arg(qAliasString))) {
+            return;
+        }
 
-    QString errorStr;
-    if (!gmModel->removeLegacyGM(qAliasString.toStdString(), txId.toStdString(), indexOut, errorStr)) {
-        inform(errorStr);
-        return;
+        auto res = gmModel->killDGM(uint256S(txId.toStdString()), indexOut);
+        if (!res) {
+            inform(QString::fromStdString(res.getError()));
+            return;
+        }
+        inform("Deterministic Gamemaster removed successfully! the change will be reflected on the next mined block");
     }
-    // Update list
-    gmModel->removeGm(index);
-    updateListState();
 }
 
 void GameMastersWidget::onCreateGMClicked()
@@ -383,19 +463,32 @@ void GameMastersWidget::onCreateGMClicked()
         gmModel->setCoinControl(coinControlDialog->coinControl);
     }
 
-    showHideOp(true);
-    GameMasterWizardDialog *dialog = new GameMasterWizardDialog(walletModel, gmModel, window);
-    if (openDialogWithOpaqueBackgroundY(dialog, window, 5, 7)) {
-        if (dialog->isOk) {
-            // Update list
-            gmModel->addGm(dialog->gmEntry);
-            updateListState();
-            // add gm
-            inform(dialog->returnStr);
-        } else {
-            warn(tr("Error creating gamemaster"), dialog->returnStr);
+    GameMasterWizardDialog* dialog = new GameMasterDialog(walletModel, mnModel, clientModel, window);
+    connect(dialog, &GameMasterWizardDialog::message, this, &PWidget::emitMessage);
+    do {
+        showHideOp(true);
+        dialog->isWaitingForAsk = false;
+        if (openDialogWithOpaqueBackgroundY(dialog, window, 5, 7)) {
+            if (dialog->isOk) {
+                updateListState();
+                inform(dialog->returnStr);
+            } else {
+                warn(tr("Error creating gamemaster"), dialog->returnStr);
+            }
+        } else if (dialog->isWaitingForAsk) {
+            auto* askDialog = new DefaultDialog(window);
+            showHide(true);
+            askDialog->setText(tr("Advanced Gamemaster Configurations"),
+                            tr("The wallet can complete the next steps,\ncreating the GM keys and addresses automatically\n\n"
+                               "Do you want to customize the owner, operator\nand voter or create them automatically?\n"
+                               "(recommended only for advanced users)"),
+                               tr("Automatic"), tr("Customize"));
+            askDialog->adjustSize();
+            openDialogWithOpaqueBackground(askDialog, window);
+            askDialog->isOk ? dialog->completeTask() : dialog->moveToAdvancedConf();
         }
-    }
+    } while (dialog->isWaitingForAsk);
+
     dialog->deleteLater();
     resetCoinControl();
 }

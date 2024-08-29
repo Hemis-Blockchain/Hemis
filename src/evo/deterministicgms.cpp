@@ -7,7 +7,6 @@
 
 #include "bls/key_io.h"
 #include "chain.h"
-#include "coins.h"
 #include "chainparams.h"
 #include "consensus/upgrades.h"
 #include "consensus/validation.h"
@@ -505,6 +504,7 @@ bool CDeterministicGMManager::ProcessBlock(const CBlock& block, const CBlockInde
         }
 
         diff.nHeight = pindex->nHeight;
+        diff.blockHash = pindex->GetBlockHash();
         gmListDiffsCache.emplace(pindex->GetBlockHash(), diff);
     } catch (const std::exception& e) {
         LogPrintf("CDeterministicGMManager::%s -- internal error: %s\n", __func__, e.what());
@@ -888,6 +888,7 @@ CDeterministicGMList CDeterministicGMManager::GetListForBlock(const CBlockIndex*
         }
 
         diff.nHeight = pindex->nHeight;
+        diff.blockhash = pindex->GetBlockHash();
         gmListDiffsCache.emplace(pindex->GetBlockHash(), std::move(diff));
         listDiffIndexes.emplace_front(pindex);
         pindex = pindex->pprev;

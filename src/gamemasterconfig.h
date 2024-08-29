@@ -21,27 +21,39 @@ public:
     private:
         std::string alias;
         std::string ip;
-        std::string privKey;
+        std::string privKeyStr;
+        std::string pubKeyStr;
         std::string txHash;
         std::string outputIndex;
 
     public:
-        CGamemasterEntry(std::string& _alias, std::string& _ip, std::string& _privKey, std::string& _txHash, std::string& _outputIndex) :
-            alias(_alias), ip(_ip), privKey(_privKey), txHash(_txHash), outputIndex(_outputIndex) { }
+        CGamemasterEntry(std::string& _alias,
+                         std::string& _ip,
+                         std::string& _privKey,
+                         std::string& _pubKeyStr,
+                         std::string& _txHash,
+                         std::string& _outputIndex) :
+            alias(_alias), ip(_ip), privKeyStr_privKeyStr), pubKeyStr(_pubKeyStr), txHash(_txHash), outputIndex(_outputIndex) { }
 
-        const std::string& getAlias() const { return alias; }
-        const std::string& getOutputIndex() const { return outputIndex; }
+        std::string& getAlias() const { return alias; }
+        std::string& getOutputIndex() const { return outputIndex; }
         bool castOutputIndex(int& n) const;
-        const std::string& getPrivKey() const { return privKey; }
-        const std::string& getTxHash() const { return txHash; }
-        const std::string& getIp() const { return ip; }
+        std::string& getPrivKey() const { return privKeyStr; }
+        std::string& getPubKey() const { return pubKeyStr; }
+        std::string& getTxHash() const { return txHash; }
+        std::string& getIp() const { return ip; }
     };
 
     CGamemasterConfig() { entries = std::vector<CGamemasterEntry>(); }
 
     void clear() { LOCK(cs_entries); entries.clear(); }
     bool read(std::string& strErr);
-    CGamemasterConfig::CGamemasterEntry* add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex);
+    CGamemasterConfig::CGamemasterEntry* add(std::string alias,
+                                             std::string ip,
+                                             std::string privKeyStr,
+                                             std::string pubKeyStr,
+                                             std::string txHash,
+                                             std::string outputIndex);
     void remove(std::string alias);
 
     std::vector<CGamemasterEntry> getEntries() { LOCK(cs_entries); return entries; }

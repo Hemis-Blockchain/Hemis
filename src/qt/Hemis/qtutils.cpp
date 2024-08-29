@@ -337,7 +337,12 @@ void setCssProperty(std::initializer_list<QWidget*> args, const QString& value)
         setCssProperty(w, value);
     }
 }
-
+void setCssProperty(const std::list<QPushButton*>& args, const QString& value)
+{
+    for (QWidget* w : args) {
+        setCssProperty(w, value);
+    }
+}
 void setCssProperty(QWidget* wid, const QString& value, bool forceUpdate)
 {
     if (wid->property("cssClass") == value) return;
@@ -351,6 +356,19 @@ void forceUpdateStyle(QWidget* widget, bool forceUpdate)
         updateStyle(widget);
 }
 
+void setShortTextIfExceedSize(QLabel* label, const QString& str, int cut, int size)
+{
+    if (str.length() > size) {
+        setShortText(label, str, cut);
+    } else {
+        label->setText(str);
+    }
+}
+
+void setShortText(QLabel* label, const QString& str, int size)
+{
+    label->setText(str.left(size) + "..." + str.right(size));
+}
 void forceUpdateStyle(std::initializer_list<QWidget*> args)
 {
     for (QWidget* w : args) {

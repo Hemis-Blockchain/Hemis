@@ -109,15 +109,20 @@ void GmSelectionDialog::updateView()
     ui->treeWidget->clear();
     ui->treeWidget->setEnabled(false); // performance, otherwise the labels update would be called for every checked checkbox
     QFlags<Qt::ItemFlag> flgCheckbox = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable;
-    QFlags<Qt::ItemFlag> flgTristate = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsTristate;
+    QFlags<Qt::ItemFlag> flgTristate = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsTristate;\
 
+    bool isLegacyObselete = gmModel->isLegacySystemObsolete();
     for (int i = 0; i < gmModel->rowCount(); ++i) {
-        QString alias = gmModel->index(i, GMModel::ALIAS, QModelIndex()).data().toString();
-        QString status = gmModel->index(i, GMModel::STATUS, QModelIndex()).data().toString();
-        VoteInfo* ptrVoteInfo{nullptr};
-        auto it = votes.find(alias.toStdString());
-        if (it != votes.end()) { ptrVoteInfo = &it->second; }
-        appendItem(flgCheckbox, flgTristate, alias, status, ptrVoteInfo);
+        uint8_t gmType = gmModel->index(i, GMModel::TYPE, QModelIndex()).data().toUInt();
+        bool acceptLegacy = gmType == GMViewType::LEGACY && !isLegacyObselete;
+        if (acceptLegacy || gmType & GMViewType::DGM_VOTER) {
+            QString alias = gmModel->index(i, GMModel::ALIAS, QModelIndex()).data().toString();
+            QString status = gmModel->index(i, GMModel::STATUS, QModelIndex()).data().toString();
+            VoteInfo* ptrVoteInfo{nullptr};
+            auto it = votes.find(alias.toStdString());
+            if (it != votes.end()) { ptrVoteInfo = &it->second; }
+            appendItem(flgCheckbox, flgTristate, alias, status, ptrVoteInfo);
+        }
     }
 
     // save COLUMN_CHECKBOX width for tree-mode

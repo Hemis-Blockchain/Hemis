@@ -6,7 +6,6 @@
 
 #include <QPainter>
 #include <QSizePolicy>
-#include "qt/Hemis/addresslabelrow.h"
 #include "qt/Hemis/contactdropdownrow.h"
 #include "qt/Hemis/qtutils.h"
 #include "qt/Hemis/furlistrow.h"
@@ -19,7 +18,6 @@
 class ContViewHolder : public FurListRow<QWidget*>
 {
 public:
-    ContViewHolder();
 
     explicit ContViewHolder(bool _isLightTheme) : FurListRow(), isLightTheme(_isLightTheme){}
 
@@ -50,13 +48,13 @@ public:
 
 ContactsDropdown::ContactsDropdown(int minWidth, int minHeight, HemisGUI* _window, QWidget* _parent) : PWidget(_window, _parent)
 {
-    this->setStyleSheet(_window->styleSheet());
+    setStyleSheet(_window->styleSheet());
     init(minWidth, minHeight);
 }
 
 ContactsDropdown::ContactsDropdown(int minWidth, int minHeight, PWidget* parent) : PWidget(parent)
 {
-    this->setStyleSheet(parent->styleSheet());
+    setStyleSheet(parent->styleSheet());
     init(minWidth, minHeight);
 }
 
@@ -92,10 +90,10 @@ void ContactsDropdown::init(int minWidth, int minHeight)
 void ContactsDropdown::setWalletModel(WalletModel* _model, const QStringList& type){
     if (!model) {
         model = _model->getAddressTableModel();
-        this->filter = new AddressFilterProxyModel(type, this);
-        this->filter->setSourceModel(model);
-        this->filter->sort(AddressTableModel::Label, Qt::AscendingOrder);
-        list->setModel(this->filter);
+        filter = new AddressFilterProxyModel(type, this);
+        filter->setSourceModel(model);
+        filter->sort(AddressTableModel::Label, Qt::AscendingOrder);
+        list->setModel(filter);
         list->setModelColumn(AddressTableModel::Address);
     } else {
         setType(type);

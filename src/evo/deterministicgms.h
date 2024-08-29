@@ -499,6 +499,7 @@ class CDeterministicGMListDiff
 {
 public:
     int nHeight{-1}; //memory only
+    uint256 blockHash; //memory only
 
     std::vector<CDeterministicGMCPtr> addedGMs;
     // keys are all relating to the internalId of GMs

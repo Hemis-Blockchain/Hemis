@@ -229,11 +229,13 @@ void CMainSignals::BlockChecked(const CBlock& block, const CValidationState& sta
 }
 
 void CMainSignals::NotifyGamemasterListChanged(bool undo, const CDeterministicGMList& oldGMList, const CDeterministicGMListDiff& diff) {
-    m_internals->NotifyGamemasterListChanged(undo, oldGMList, diff);
-    LOG_EVENT("%s: (undo=%d) old list for=%s, added=%d, updated=%d, removed=%d", __func__,
-              undo,
-              oldGMList.GetBlockHash().ToString(),
-              diff.addedGMs.size(),
-              diff.updatedGMs.size(),
-              diff.removedGms.size());
-}
+    auto event = [undo, oldGMList, diff, this] {
+        m_internals->NotifyGamemasterListChanged(undo, oldGMList, diff);
+    };
+    ENQUEUE_AND_LOG_EVENT(event,
+                          "%s: (undo=%d) old list for=%s, added=%d, updated=%d, removed=%d", __func__,
+                          undo,
+                          oldGMList.GetBlockHash().ToString(),
+                          diff.addedGMs.size(),
+                          diff.updatedGMs.size(),
+                          diff.removedGms.size());

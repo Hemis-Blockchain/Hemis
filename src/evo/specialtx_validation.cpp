@@ -21,7 +21,7 @@
 
 /* -- Helper static functions -- */
 
-static bool CheckService(const CService& addr, CValidationState& state)
+bool CheckService(const CService& addr, CValidationState& state)
 {
     if (!addr.IsValid()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr");
@@ -186,6 +186,11 @@ static bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev,
         if (!view->GetUTXOCoin(pl.collateralOutpoint, coin)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
         }
+        for (auto txIn= tx.vin.begin();txIN<tx.vin.end();txIn++){
+            if(txIn->prevout == pl.collateralOutput){
+                return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-used-as-input")
+                }
+            }
         CTxDestination collateralTxDest;
         if (!CheckCollateralOut(coin.out, pl, state, collateralTxDest)) {
             // pass the state returned by the function above
@@ -639,20 +644,4 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex)
         return false;
     }
     return true;
-}
-
-uint256 CalcTxInputsHash(const CTransaction& tx)
-{
-    CHashWriter hw(CLIENT_VERSION, SER_GETHASH);
-    // transparent inputs
-    for (const CTxIn& in: tx.vin) {
-        hw << in.prevout;
-    }
-    // shield inputs
-    if (tx.hasSaplingData()) {
-        for (const SpendDescription& sd: tx.sapData->vShieldedSpend) {
-            hw << sd.nullifier;
-        }
-    }
-    return hw.GetHash();
 }

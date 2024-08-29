@@ -489,5 +489,7 @@ void SetTxPayload(CMutableTransaction& tx, const T& payload)
     ds << payload;
     tx.extraPayload.emplace(ds.begin(), ds.end());
 }
+uint256 CalcTxInputsHash(const CTransaction& tx);
+
 
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H

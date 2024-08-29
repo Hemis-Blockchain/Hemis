@@ -235,5 +235,7 @@
         <file alias="img-empty-governance">Hemis/res/img/img-empty-governance.svg</file>
         <file alias="img-empty-dark-governance">Hemis/res/img/img-empty-dark-governance.svg</file>
         <file alias="ic-check-block">Hemis/res/img/ic-check-block.svg</file>
+        <file alias="ic-dgm">Hemis/res/img/ic-dgm.svg</file>
+        <file alias="ic-lgm">Hemis/res/img/ic-lgm.svg</file>
     </qresource>
 </RCC>

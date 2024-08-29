@@ -111,6 +111,7 @@ QT_MOC_CPP = \
   qt/Hemis/moc_furabstractlistitemdelegate.cpp \
   qt/Hemis/moc_receivedialog.cpp \
   qt/Hemis/moc_pfborderimage.cpp \
+  qt/Hemis/moc_clickablelabel.cpp \
   qt/Hemis/moc_topbar.cpp \
   qt/Hemis/moc_txrow.cpp \
   qt/Hemis/moc_dashboardwidget.cpp \
@@ -510,6 +511,8 @@ RES_ICONS = \
   qt/Hemis/res/img/ic-nav-governance-hover.svg \
   qt/Hemis/res/img/ic-time.svg \
   qt/Hemis/res/img/ic-link-hover.svg \
+  qt/Hemis/res/img/ic-dgm.svg \
+  qt/Hemis/res/img/ic-lgm.svg \
   qt/Hemis/res/img/img-empty-governance.svg \
   qt/Hemis/res/img/img-empty-dark-governance.svg
 

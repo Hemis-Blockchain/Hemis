@@ -274,6 +274,7 @@ set(SERVER_SOURCES
         ./src/txmempool.cpp
         ./src/validation.cpp
         ./src/validationinterface.cpp
+        ./src/interfaces/tiertwo.cpp
         )
 add_library(SERVER_A STATIC ${BitcoinHeaders} ${SERVER_SOURCES})
 if(MINIUPNP_FOUND)
@@ -469,6 +470,7 @@ set(COMMON_SOURCES
         ./src/tiertwo/netfulfilledman.cpp
         ./src/tiertwo/tiertwo_sync_state.cpp
         ./src/warnings.cpp
+        ./src/evo/specialtx_utils.cpp
         )
 add_library(COMMON_A STATIC ${BitcoinHeaders} ${COMMON_SOURCES})
 target_include_directories(COMMON_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src

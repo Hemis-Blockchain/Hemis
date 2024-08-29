@@ -10,6 +10,7 @@
 #include "flatdb.h"
 #include "guiinterface.h"
 #include "guiinterfaceutil.h"
+#include "interfaces/tiertwo.h"
 #include "gamemasterman.h"
 #include "gamemaster-payments.h"
 #include "gamemasterconfig.h"
@@ -46,6 +47,9 @@ void InitTierTwoInterfaces()
 {
     pEvoNotificationInterface = std::make_unique<EvoNotificationInterface>();
     RegisterValidationInterface(pEvoNotificationInterface.get());
+
+    interfaces::g_tiertwo = std::make_unique<interfaces::TierTwo>();
+    RegisterValidationInterface(interfaces::g_tiertwo.get());
 }
 
 void ResetTierTwoInterfaces()
@@ -60,6 +64,9 @@ void ResetTierTwoInterfaces()
         delete activeGamemasterManager;
         activeGamemasterManager = nullptr;
     }
+    if (interfaces::g_tiertwo) {
+        UnregisterValidationInterface(interfaces::g_tiertwo.get());
+        interfaces::g_tiertwo.reset();
 }
 
 void InitTierTwoPreChainLoad(bool fReindex)
@@ -82,6 +89,7 @@ void InitTierTwoChainTip()
     // force UpdatedBlockTip to initialize nCachedBlockHeight for DS, GM payments and budgets
     // but don't call it directly to prevent triggering of other listeners like zmq etc.
     pEvoNotificationInterface->InitializeCurrentBlockTip();
+    interfaces::g_tiertwo->init();
 }
 
 // Sets the last CACHED_BLOCK_HASHES hashes into gamemaster manager cache

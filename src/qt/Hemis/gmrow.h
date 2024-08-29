@@ -19,7 +19,11 @@ public:
     explicit GMRow(QWidget *parent = nullptr);
     ~GMRow();
 
-    void updateView(QString address, const QString& label, QString status, bool wasCollateralAccepted);
+    void updateView(QString address,
+                    const QString& label,
+                    QString status,
+                    bool wasCollateralAccepted,
+                    uint8_t type);
 
 Q_SIGNALS:
     void onMenuClicked();

@@ -155,10 +155,13 @@ SET(QT_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/Hemis/welcomecontentwidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Hemis/splash.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Hemis/governancemodel.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Hemis/clickablelabel.h
         )
 
 qt5_generate_moc(Hemis/pfborderimage.h ${CMAKE_CURRENT_SOURCE_DIR}/Hemis/moc_pfborderimage.cpp)
 list(APPEND QT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/Hemis/moc_pfborderimage.cpp)
+qt5_generate_moc(Hemis/clickablelabel.h ${CMAKE_CURRENT_SOURCE_DIR}/Hemis/moc_clickablelabel.cpp
+list(APPEND QT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR/Hemis/moc_clickablelabel.cpp
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     list(APPEND QT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/macdockiconhandler.mm)

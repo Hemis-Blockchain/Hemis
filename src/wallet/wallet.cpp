@@ -3279,6 +3279,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend,
                         scriptPubKey,
                         sigdata,
                         txNew.GetRequiredSigVersion(),
+                        !haveKey // fColdstake
                         )) {
                     strFailReason = _("Signing transaction failed");
                     return false;

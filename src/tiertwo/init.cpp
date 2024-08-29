@@ -11,6 +11,7 @@
 #include "guiinterface.h"
 #include "guiinterfaceutil.h"
 #include "interfaces/tiertwo.h"
+
 #include "gamemasterman.h"
 #include "gamemaster-payments.h"
 #include "gamemasterconfig.h"
@@ -64,9 +65,11 @@ void ResetTierTwoInterfaces()
         delete activeGamemasterManager;
         activeGamemasterManager = nullptr;
     }
+
     if (interfaces::g_tiertwo) {
         UnregisterValidationInterface(interfaces::g_tiertwo.get());
         interfaces::g_tiertwo.reset();
+    }
 }
 
 void InitTierTwoPreChainLoad(bool fReindex)

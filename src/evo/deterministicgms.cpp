@@ -888,7 +888,7 @@ CDeterministicGMList CDeterministicGMManager::GetListForBlock(const CBlockIndex*
         }
 
         diff.nHeight = pindex->nHeight;
-        diff.blockhash = pindex->GetBlockHash();
+        diff.blockHash = pindex->GetBlockHash();
         gmListDiffsCache.emplace(pindex->GetBlockHash(), std::move(diff));
         listDiffIndexes.emplace_front(pindex);
         pindex = pindex->pprev;

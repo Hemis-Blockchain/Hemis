@@ -239,3 +239,5 @@ void CMainSignals::NotifyGamemasterListChanged(bool undo, const CDeterministicGM
                           diff.addedGMs.size(),
                           diff.updatedGMs.size(),
                           diff.removedGms.size());
+
+}

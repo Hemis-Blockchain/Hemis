@@ -7,7 +7,7 @@
 #include "coincontrol.h"
 #include "qt/Hemis/forms/ui_gamemasterswidget.h"
 
-#include "qt/pivx/defaultdialog.h"
+#include "qt/Hemis/defaultdialog.h"
 #include "qt/Hemis/qtutils.h"
 #include "qt/Hemis/gmrow.h"
 #include "qt/Hemis/gminfodialog.h"

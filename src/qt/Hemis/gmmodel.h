@@ -54,7 +54,6 @@ public:
 
     uint16_t getType() const;
 };
-
 class GMModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -91,10 +90,10 @@ public:
     bool removeGm(const QModelIndex& index);
     bool addGm(CGamemasterConfig::CGamemasterEntry* entry);
     void updateGMList();
+
     // Whether the GM legacy system is active or not
     bool isLegacySystemObsolete();
     // Whether the tier two synchronization completed or not
-
     bool isGMsNetworkSynced();
     // Returns the GM activeState field.
     int getGMState(const QString& gmAlias);
@@ -129,6 +128,7 @@ public:
     // Completely stops the Gamemaster spending the collateral
     OperationResult killDGM(const uint256& collateralHash, unsigned int outIndex);
 
+
     //Unban a Pose-banned DGM
     bool unbanDGM(CBLSSecretKey& operatorKey,uint256 proTxHash, std::string& strError);
     // Generates the collateral transaction
@@ -144,7 +144,6 @@ public:
                                                         std::string& serviceAddr,
                                                         const std::string& port,
                                                         const std::string& gmKeyString,
-                                                        const std::string& _gmPubKeyStr,
                                                         QString& ret_error);
 
     bool removeLegacyGM(const std::string& alias_to_remove, const std::string& tx_id, unsigned int out_index, QString& ret_error);
@@ -152,10 +151,9 @@ public:
     void resetCoinControl();
 
 private:
-    CCoinControl* coinControl;
-    // alias gm node ---> pair <ip, master node>
     WalletModel* walletModel{nullptr};
-    // alias gm node ---> <ip, master node>
+    CCoinControl* coinControl;
+    // alias gm node ---> <ip, game master>
     QList<GamemasterWrapper> nodes;
     QMap<std::string, bool> collateralTxAccepted;
 

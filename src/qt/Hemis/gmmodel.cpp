@@ -216,7 +216,7 @@ bool GMModel::removeGm(const QModelIndex& modelIndex)
     beginRemoveRows(QModelIndex(), idx, idx);
     auto gmWrapper = nodes.at(idx);
     if (gmWrapper.collateralId) collateralTxAccepted.remove(gmWrapper.collateralId->hash.GetHex());
-    nodes.removeAt(idx)
+    nodes.removeAt(idx);
     endRemoveRows();
     Q_EMIT dataChanged(index(idx, 0, QModelIndex()), index(idx, 5, QModelIndex()) );
     return true;

@@ -8,7 +8,7 @@
 #include "qt/Hemis/qtutils.h"
 #include <QTimer>
 
-TooltipMenu::TooltipMenu(HemisGUI* _window, QWidget* parent) :
+TooltipMenu::TooltipMenu(PIVXGUI* _window, QWidget* parent) :
     PWidget(_window, parent)
 {
     setupUi();
@@ -85,5 +85,6 @@ void TooltipMenu::hideTooltip()
 }
 
 void TooltipMenu::showEvent(QShowEvent *event){
+
     QTimer::singleShot(5000, this, &TooltipMenu::hideTooltip);
-}
+}}

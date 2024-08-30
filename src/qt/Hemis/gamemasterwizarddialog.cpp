@@ -12,9 +12,8 @@
 #include "qt/Hemis/qtutils.h"
 #include "qt/walletmodel.h"
 
-#include <QDoubleValidator>
+#include <QtDoubleValidator>
 #include <QRegularExpression>
-#include <QGraphicsDropShadowEffect>
 
 static inline QString formatParagraph(const QString& str) {
     return "<p align=\"justify\" style=\"text-align:center;\">" + str + "</p>";
@@ -27,7 +26,6 @@ static inline QString formatHtmlContent(const QString& str) {
 static void initTopBtns(const QList<QPushButton*>& icons, const QList<QPushButton*>& numbers, const QList<QPushButton*>& names)
 {
     assert(icons.size() == names.size() && names.size() == numbers.size());
-    QSize BUTTON_SIZE = QSize(22, 22);
     for (int i=0; i < icons.size(); i++) {
         auto pushNumber = numbers[i];
         auto pushIcon = icons[i];
@@ -66,10 +64,11 @@ GameMasterWizardDialog::GameMasterWizardDialog(WalletModel* model, GMModel* _gmM
     walletModel(model),
     gmModel(_gmModel),
     clientModel(_clientModel)
+
 {
     ui->setupUi(this);
-    setStyleSheet(parent->styleSheet());
 
+    setStyleSheet(parent->styleSheet());
     setCssProperty(ui->frame, "container-dialog");
     ui->frame->setContentsMargins(10,10,10,10);
 
@@ -81,7 +80,6 @@ GameMasterWizardDialog::GameMasterWizardDialog(WalletModel* model, GMModel* _gmM
     setCssProperty({ui->labelLine1, ui->labelLine2, ui->labelLine3, ui->labelLine4, ui->labelLine5}, "line-purple");
 
     setCssProperty({ui->groupBoxName, ui->groupContainer}, "container-border");
-
     QString collateralAmountStr(GUIUtil::formatBalance(gmModel->getGMCollateralRequiredAmount()));
     initIntroPage(collateralAmountStr);
     initCollateralPage(collateralAmountStr);
@@ -105,6 +103,78 @@ GameMasterWizardDialog::GameMasterWizardDialog(WalletModel* model, GMModel* _gmM
     setCssProperty(ui->btnBack , "btn-dialog-cancel");
     ui->btnBack->setVisible(false);
     setCssProperty(ui->pushButtonSkip, "ic-close");
+
+    connect(ui->pushButtonSkip, &QPushButton::clicked, this, &GameMasterWizardDialog::close);
+    connect(ui->btnNext, &QPushButton::clicked, this, &GameMasterWizardDialog::accept);
+    connect(ui->btnBack, &QPushButton::clicked, this, &GameMasterWizardDialog::onBackClicked);
+}
+
+void GameMasterWizardDialog::initIntroPage(const QString& collateralAmountStr)
+{
+
+    setCssProperty(ui->labelTitle1, "text-title-dialog");
+    setCssProperty(ui->labelMessage1a, "text-main-grey");
+    setCssProperty(ui->labelMessage1b, "text-main-purple");
+
+    QString collateralAmountStr = GUIUtil::formatBalance(gmModel->getGMCollateralRequiredAmount());
+    ui->labelMessage1a->setText(formatHtmlContent(
+            formatParagraph(tr("To create a Hemis GameMaster you must dedicate %1 (the unit of HMS) "
+                               "to the network (however, these coins are still yours and will never leave your possession).").arg(collateralAmountStr)) +
+            formatParagraph(tr("You can deactivate the node and unlock the coins at any time."))));
+}
+
+void GameMasterWizardDialog::initCollateralPage(const QString& collateralAmountStr)
+{
+
+    setCssProperty(ui->labelTitle3, "text-title-dialog");
+    setCssProperty(ui->labelMessage3, "text-main-grey");
+    setCssSubtitleScreen(ui->labelSubtitleName);
+
+    ui->labelMessage3->setText(formatHtmlContent(
+            formatParagraph(tr("A transaction of %1 will be made").arg(collateralAmountStr)) +
+            formatParagraph(tr("to a new empty address in your wallet.")) +
+            formatParagraph(tr("The Address is labeled under the game master's name."))));
+
+    initCssEditLine(ui->lineEditName);
+    // GM alias must not contain spaces or "#" character
+    QRegularExpression rx("^(?:(?![\\#\\s]).)*");
+    ui->lineEditName->setValidator(new QRegularExpressionValidator(rx, ui->lineEditName));
+
+}
+void GameMasterWizardDialog::initServicePage()
+{
+    setCssProperty(ui->labelTitle4, "text-title-dialog");
+    setCssProperty({ui->labelSubtitleIp, ui->labelSubtitlePort}, "text-title");
+    setCssSubtitleScreen(ui->labelSubtitleAddressIp);
+
+    initCssEditLine(ui->lineEditIpAddress);
+    initCssEditLine(ui->lineEditPort);
+    ui->stackedWidget->setCurrentIndex(pos);
+    // Fixed to default port number for mainnet and testnet.
+    ui->lineEditPort->setEnabled(walletModel->isRegTestNetwork());
+    ui->lineEditPort->setText(QString::number(clientModel->getNetworkPort()));
+}
+
+void GameMasterWizardDialog::initOwnerPage()
+{
+    setCssProperty(ui->labelTitle5, "text-title-dialog");
+    setCssSubtitleScreen(ui->labelSubtitleOwner);
+    setCssProperty({ui->labelSubtitleOwnerAddress, ui->labelSubtitlePayoutAddress}, "text-title");
+    initCssEditLine(ui->lineEditOwnerAddress);
+    initCssEditLine(ui->lineEditPayoutAddress);
+    setDropdownList(ui->lineEditOwnerAddress, actOwnerAddrList, {AddressTableModel::Receive});
+}
+
+void GameMasterWizardDialog::initOperatorPage()
+{
+    setCssProperty(ui->labelTitle6, "text-title-dialog");
+    setCssSubtitleScreen(ui->labelSubtitleOperator);
+    setCssProperty({ui->labelSubtitleOperatorKey, ui->labelSubtitleOperatorReward}, "text-title");
+    initCssEditLine(ui->lineEditOperatorKey);
+    initCssEditLine(ui->lineEditOperatorPayoutAddress);
+    initCssEditLine(ui->lineEditPercentage);
+    ui->lineEditPercentage->setValidator(new QDoubleValidator(0.00, 100.00, 2, ui->lineEditPercentage));
+}
 
 void GameMasterWizardDialog::initVoterPage()
 {
@@ -163,72 +233,6 @@ void GameMasterWizardDialog::initSummaryPage()
     });
 }
 
-void GameMasterWizardDialog::initIntroPage(const QString& collateralAmountStr)
-{
-    setCssProperty(ui->labelTitle1, "text-title-dialog");
-    setCssProperty(ui->labelMessage1a, "text-main-grey");
-    setCssProperty(ui->labelMessage1b, "text-main-purple");
-
-    QString collateralAmountStr = GUIUtil::formatBalance(gmModel->getGMCollateralRequiredAmount());
-    ui->labelMessage1a->setText(formatHtmlContent(
-            formatParagraph(tr("To create a Hemis Gamemaster you must dedicate %1 (the unit of HEMIS) "
-                               "to the network (however, these coins are still yours and will never leave your possession).").arg(collateralAmountStr)) +
-            formatParagraph(tr("You can deactivate the node and unlock the coins at any time."))));
-}
-
-void GameMasterWizardDialog::initCollateralPage(const QString& collateralAmountStr)
-{
-
-    setCssProperty(ui->labelTitle3, "text-title-dialog");
-    setCssProperty(ui->labelMessage3, "text-main-grey");
-    setCssSubtitleScreen(ui->labelSubtitleName);
-
-    ui->labelMessage3->setText(formatHtmlContent(
-            formatParagraph(tr("A transaction of %1 will be made").arg(collateralAmountStr)) +
-            formatParagraph(tr("to a new empty address in your wallet.")) +
-            formatParagraph(tr("The Address is labeled under the game master's name."))));
-
-    initCssEditLine(ui->lineEditName);
-    // GM alias must not contain spaces or "#" character
-    QRegularExpression rx("^(?:(?![\\#\\s]).)*");
-    ui->lineEditName->setValidator(new QRegularExpressionValidator(rx, ui->lineEditName));
-}
-
-void GameMasterWizardDialog::initServicePage()
-{
-    setCssProperty(ui->labelTitle4, "text-title-dialog");
-    setCssProperty({ui->labelSubtitleIp, ui->labelSubtitlePort}, "text-title");
-    setCssSubtitleScreen(ui->labelSubtitleAddressIp);
-
-    initCssEditLine(ui->lineEditIpAddress);
-    initCssEditLine(ui->lineEditPort);
-    ui->stackedWidget->setCurrentIndex(pos);
-    // Fixed to default port number for mainnet and testnet.
-    ui->lineEditPort->setEnabled(walletModel->isRegTestNetwork());
-    ui->lineEditPort->setText(QString::number(clientModel->getNetworkPort()));
-}
-
-void GameMasterWizardDialog::initOwnerPage()
-{
-    setCssProperty(ui->labelTitle5, "text-title-dialog");
-    setCssSubtitleScreen(ui->labelSubtitleOwner);
-    setCssProperty({ui->labelSubtitleOwnerAddress, ui->labelSubtitlePayoutAddress}, "text-title");
-    initCssEditLine(ui->lineEditOwnerAddress);
-    initCssEditLine(ui->lineEditPayoutAddress);
-    setDropdownList(ui->lineEditOwnerAddress, actOwnerAddrList, {AddressTableModel::Receive});
-}
-
-void GameMasterWizardDialog::initOperatorPage()
-{
-    setCssProperty(ui->labelTitle6, "text-title-dialog");
-    setCssSubtitleScreen(ui->labelSubtitleOperator);
-    setCssProperty({ui->labelSubtitleOperatorKey, ui->labelSubtitleOperatorReward}, "text-title");
-    initCssEditLine(ui->lineEditOperatorKey);
-    initCssEditLine(ui->lineEditOperatorPayoutAddress);
-    initCssEditLine(ui->lineEditPercentage);
-    ui->lineEditPercentage->setValidator(new QDoubleValidator(0.00, 100.00, 2, ui->lineEditPercentage));
-}
-
 void GameMasterWizardDialog::showEvent(QShowEvent *event)
 {
     if (ui->btnNext) ui->btnNext->setFocus();
@@ -250,28 +254,29 @@ void GameMasterWizardDialog::moveToNextPage(int currentPos, int nextPos)
 }
 void GameMasterWizardDialog::accept()
 {
+    switch(pos) {
+        case 0:{
     int nextPos = pos + 1;
     switch (pos) {
         case Pages::INTRO: {
             moveToNextPage(pos, nextPos);
-
             ui->btnBack->setVisible(true);
             ui->lineEditName->setFocus();
             break;
         }
-        case Pages:ALIAS: {
+        case Pages::ALIAS: {
             // No empty names accepted.
             if (ui->lineEditName->text().isEmpty()) {
                 setCssEditLine(ui->lineEditName, false, true);
                 return;
             }
             setCssEditLine(ui->lineEditName, true, true);
-            moveToNextPage(pos, nextPos);
 
+            moveToNextPage(pos, nextPos);
             ui->lineEditIpAddress->setFocus();
             break;
         }
-        case Pages:Service {
+        case Pages::SERVICE: {
             // No empty address accepted
             if (ui->lineEditIpAddress->text().isEmpty()) {
                 return;
@@ -310,7 +315,6 @@ void GameMasterWizardDialog::accept()
     }
     pos++;
 }
-
 void GameMasterWizardDialog::completeTask()
 {
     for (auto btn : list_icConfirm) { btn->setVisible(true); }
@@ -443,6 +447,7 @@ bool GameMasterWizardDialog::createGM()
         } else {
             // Empty voting address means "use the owner key for voting"
             votingAddr = ownerKeyId;
+
         }
 
         Optional<COutPoint> collateralOut = COutPoint();
@@ -540,12 +545,12 @@ bool GameMasterWizardDialog::validateOwner()
     if (!payoutAddress.isEmpty() && !walletModel->validateAddress(payoutAddress)) {
         setCssEditLine(ui->lineEditPayoutAddress, false, true);
         inform(tr("Invalid payout address"));
+
         return false;
     }
 
     return true;
 }
-
 bool GameMasterWizardDialog::validateVoter()
 {
     QString voterAddress(ui->lineEditVoterKey->text());
@@ -590,7 +595,7 @@ void GameMasterWizardDialog::onBackClicked()
     if (pos == 0) return;
     pos--;
     moveBack(pos);
-    switch(pos) {
+    switch (pos) {
         case 0:{
             ui->btnBack->setVisible(false);
             ui->btnNext->setFocus();
@@ -602,7 +607,6 @@ void GameMasterWizardDialog::onBackClicked()
         }
     }
 }
-
 void GameMasterWizardDialog::setDropdownList(QLineEdit* edit, QAction* action, const QStringList& types)
 {
     action = edit->addAction(QIcon("://ic-contact-arrow-down"), QLineEdit::TrailingPosition);
@@ -634,7 +638,7 @@ void GameMasterWizardDialog::onAddrListClicked(const QStringList& types, QLineEd
         dropdownMenu = new ContactsDropdown(
                 width,
                 height,
-                dynamic_cast<HEMISGUI*>(parent()),
+                dynamic_cast<PIVXGUI*>(parent()),
                 this
         );
         // TODO: Update connection every time that a new 'edit' is provided
@@ -659,7 +663,6 @@ void GameMasterWizardDialog::onAddrListClicked(const QStringList& types, QLineEd
     dropdownMenu->move(position);
     dropdownMenu->show();
 }
-
 void GameMasterWizardDialog::inform(const QString& text)
 {
     if (!snackBar)
@@ -668,16 +671,13 @@ void GameMasterWizardDialog::inform(const QString& text)
     snackBar->resize(this->width(), snackBar->height());
     openDialog(snackBar, this);
 }
-
 bool GameMasterWizardDialog::errorOut(const QString& err)
 {
     returnStr = err;
     return false;
 }
-
 GameMasterWizardDialog::~GameMasterWizardDialog()
 {
     delete snackBar;
     delete ui;
-}
 }

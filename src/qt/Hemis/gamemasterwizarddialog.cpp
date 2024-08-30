@@ -12,7 +12,7 @@
 #include "qt/Hemis/qtutils.h"
 #include "qt/walletmodel.h"
 
-#include <QtDoubleValidator>
+#include <QDoubleValidator>
 #include <QRegularExpression>
 
 static inline QString formatParagraph(const QString& str) {

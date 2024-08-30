@@ -838,8 +838,8 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     CheckOpResult(FundSpecialTx(pwallet, tx, pl));
     CheckOpResult(SignSpecialTxPayloadByHash(tx, pl, ownerKey));
 
-    return SignAndSendSpecialTx(pwallet, tx, pl);
-}
+    CheckOpResult(SignAndSendSpecialTx(pwallet, tx, pl), RPC_VERIFY_REJECTED);
+    return tx.GetHash().GetHex();
 
 UniValue protx_revoke(const JSONRPCRequest& request)
 {

@@ -1,13 +1,14 @@
-// Copyright (c) 2024 The Hemis Core developers
+// Copyright (c) 2019-2022 The Hemis Core developers
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or https://www.opensource.org/licenses/mit-license.php.
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "qt/Hemis/tooltipmenu.h"
+#include "qt/Hemis/forms/ui_tooltipmenu.h"
 
 #include "qt/Hemis/qtutils.h"
 #include <QTimer>
 
-TooltipMenu::TooltipMenu(HEMISGUI* _window, QWidget* parent) :
+TooltipMenu::TooltipMenu(PIVXGUI* _window, QWidget* parent) :
     PWidget(_window, parent)
 {
     setupUi();
@@ -16,8 +17,6 @@ TooltipMenu::TooltipMenu(HEMISGUI* _window, QWidget* parent) :
 
 QPushButton* TooltipMenu::createBtn(const QString& label)
 {
-    ui->btnLast->setCheckable(checkable);
-    ui->btnLast->setChecked(isChecked);
     auto* btn = new QPushButton(container);
     QSizePolicy sizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
     sizePolicy.setHorizontalStretch(0);
@@ -67,6 +66,7 @@ void TooltipMenu::updateLabelForBtn(uint8_t id, const QString& btnLabel)
     if (it != mapBtns.end()) {
         it.value()->setText(btnLabel);
     }
+}
 
 void TooltipMenu::setBtnCheckable(uint8_t id, bool checkable, bool isChecked)
 {
@@ -77,6 +77,7 @@ void TooltipMenu::setBtnCheckable(uint8_t id, bool checkable, bool isChecked)
         btn->setChecked(isChecked);
     }
 }
+}
 
 void TooltipMenu::hideTooltip()
 {
@@ -85,4 +86,4 @@ void TooltipMenu::hideTooltip()
 
 void TooltipMenu::showEvent(QShowEvent *event){
     QTimer::singleShot(5000, this, &TooltipMenu::hideTooltip);
-}}
+}

@@ -535,7 +535,7 @@ OperationResult GMModel::killDGM(const uint256& collateralHash, unsigned int out
     CAmount amountToSend = output.nValue - CWallet::minTxFee.GetFeePerK();
     recipients.push_back(SendCoinsRecipient{QString::fromStdString(ownAddr.getObjResult()->ToString()), "", amountToSend, ""});
     WalletModelTransaction currentTransaction(recipients);
-    walletModel->unlockCoin(collateralOut);
+    walletModel->unlockCoin(collateral_output);
     WalletModel::SendCoinsReturn prepareStatus = walletModel->prepareTransaction(&currentTransaction, &coinControl, false);
 
     CClientUIInterface::MessageBoxFlags informType;
@@ -548,14 +548,14 @@ OperationResult GMModel::killDGM(const uint256& collateralHash, unsigned int out
         true);
 
     if (prepareStatus.status != WalletModel::OK) {
-        walletModel->lockCoin(collateralOut);
+        walletModel->lockCoin(collateral_output);
         return {false, returnMsg.toStdString()};
     }
 
     WalletModel::SendCoinsReturn sendStatus = walletModel->sendCoins(currentTransaction);
     returnMsg = GuiTransactionsUtils::ProcessSendCoinsReturn(sendStatus, walletModel, informType);
     if (sendStatus.status != WalletModel::OK) {
-        walletModel->lockCoin(collateralOut);
+        walletModel->lockCoin(collateral_output);
         return {false, returnMsg.toStdString()};
     }
 

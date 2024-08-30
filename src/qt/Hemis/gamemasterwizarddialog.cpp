@@ -254,8 +254,6 @@ void GameMasterWizardDialog::moveToNextPage(int currentPos, int nextPos)
 }
 void GameMasterWizardDialog::accept()
 {
-    switch(pos) {
-        case 0:{
     int nextPos = pos + 1;
     switch (pos) {
         case Pages::INTRO: {

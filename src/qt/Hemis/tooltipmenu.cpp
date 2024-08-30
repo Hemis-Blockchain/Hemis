@@ -85,6 +85,5 @@ void TooltipMenu::hideTooltip()
 }
 
 void TooltipMenu::showEvent(QShowEvent *event){
-
     QTimer::singleShot(5000, this, &TooltipMenu::hideTooltip);
-}}
+}

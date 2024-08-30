@@ -114,7 +114,7 @@ int ClientModel::getNumBlocksAtStartup()
     return numBlocksAtStartup;
 }
 
-unsigned int ClientModel:getNetworkPort();
+unsigned int ClientModel::getNetworkPort();
 {
     return Params().GetDefaultPort();
 }

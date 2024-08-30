@@ -636,7 +636,7 @@ void GameMasterWizardDialog::onAddrListClicked(const QStringList& types, QLineEd
         dropdownMenu = new ContactsDropdown(
                 width,
                 height,
-                dynamic_cast<HEMISGUI*>(parent()),
+                dynamic_cast<HemisGUI*>(parent()),
                 this
         );
         // TODO: Update connection every time that a new 'edit' is provided

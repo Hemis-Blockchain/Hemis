@@ -8,7 +8,7 @@
 #include "qt/Hemis/qtutils.h"
 #include <QTimer>
 
-TooltipMenu::TooltipMenu(HEMISGUI* _window, QWidget* parent) :
+TooltipMenu::TooltipMenu(HemisGUI* _window, QWidget* parent) :
     PWidget(_window, parent)
 {
     setupUi();

@@ -179,7 +179,7 @@ void GameMastersWidget::onGMClicked(const QModelIndex& _index)
 
     index = _index;
     uint8_t gmType = index.sibling(index.row(), GMModel::TYPE).data(Qt::DisplayRole).toUInt();
-    menu->showHideBtn(0, mnType == GMViewType::LEGACY);
+    menu->showHideBtn(0, gmType == GMViewType::LEGACY);
 
     menu->move(pos);
     menu->show();
@@ -220,7 +220,7 @@ void GameMastersWidget::onEditGMClicked()
                     "Cannot start gamemaster, the collateral transaction has not been confirmed by the network yet.\n"
                     "Please wait few more minutes (gamemaster collaterals require %1 confirmations).")
                            .arg(
-                               mnModel->getGamemaster
+                               gmModel->getGamemaster
                                CollateralMinConf()));
             }
         } else {
@@ -235,7 +235,7 @@ void GameMastersWidget::onEditGMClicked()
                 if (!opDGM) {
                     inform(tr("Gamemaster not found"));
                 } else {
-                    std::string operatorKeyS = opDMN->operatorSk;
+                    std::string operatorKeyS = opDGM->operatorSk;
                     if (operatorKeyS.empty()) {
                         inform("Operator secret key not found");
                     } else {
@@ -406,7 +406,7 @@ void GameMastersWidget::onDeleteGMClicked()
         }
 
         QString errorStr;
-        if (!mnModel->removeLegacyMN(qAliasString.toStdString(), txId.toStdString(), indexOut, errorStr)) {
+        if (!gmModel->removeLegacyGM(qAliasString.toStdString(), txId.toStdString(), indexOut, errorStr)) {
             inform(errorStr);
             return;
         }

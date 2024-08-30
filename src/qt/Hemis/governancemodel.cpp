@@ -265,7 +265,7 @@ OperationResult GovernanceModel::voteForProposal(const ProposalInfo& prop,
 {
     UniValue ret; // future: don't use UniValue here.
     auto p_wallet = vpwallets[0]; // TODO: move to walletModel
-    bool fLegacyGM = walletModel->isRegTestNEtwork() ? false: true; // Regtest Only DGM For Now
+    bool fLegacyGM = walletModel->isRegTestNetwork() ? false: true; // Regtest Only DGM For Now
     for (const auto& gmAlias : gmVotingAlias) {
         ret = gmBudgetVoteInner(p_wallet,
                           fLegacyGM,

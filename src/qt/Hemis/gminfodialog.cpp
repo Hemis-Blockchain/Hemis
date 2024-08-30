@@ -49,6 +49,7 @@ GmInfoDialog::GmInfoDialog(QWidget *parent) :
 }
 
 void GmInfoDialog::setDGMDataVisible(bool show)
+{
     ui->contentOwnerPayoutAddr->setVisible(show);
     ui->contentOperatorPubKey->setVisible(show);
     ui->contentOperatorSk->setVisible(show);

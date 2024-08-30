@@ -115,13 +115,6 @@ void GMModel::updateGMList()
                        index(nodes.size(), ColumnIndex::COLUMN_COUNT, QModelIndex()));
 }
 
-int GMModel::rowCount(const QModelIndex &parent) const
-{
-    if (parent.isValid())
-        return 0;
-    return nodes.size();
-}
-
 int GMModel::columnCount(const QModelIndex &parent) const
 {
     if (parent.isValid())

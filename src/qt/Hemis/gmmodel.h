@@ -43,7 +43,7 @@ public:
     QString label;
     QString ipPort;
     CGamemaster* gamemaster{nullptr};
-    // Cache collateral id and MN pk to be used if 'gamemaster' is null.
+    // Cache collateral id and GM pk to be used if 'gamemaster' is null.
     // (Denoting GMs that were not initialized on the conf file or removed from the network list)
     // when gamemaster is not null, the collateralId is directly pointing to gamemaster.vin.prevout.
     Optional<COutPoint> collateralId{nullopt};
@@ -91,7 +91,7 @@ public:
     bool removeGm(const QModelIndex& index);
     bool addGm(CGamemasterConfig::CGamemasterEntry* entry);
     void updateGMList();
-    // Whether the MN legacy system is active or not
+    // Whether the GM legacy system is active or not
     bool isLegacySystemObsolete();
     // Whether the tier two synchronization completed or not
 
@@ -155,7 +155,7 @@ private:
     CCoinControl* coinControl;
     // alias gm node ---> pair <ip, master node>
     WalletModel* walletModel{nullptr};
-    // alias mn node ---> <ip, master node>
+    // alias gm node ---> <ip, master node>
     QList<GamemasterWrapper> nodes;
     QMap<std::string, bool> collateralTxAccepted;
 

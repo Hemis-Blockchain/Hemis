@@ -877,7 +877,7 @@ void SendWidget::onMenuClicked(SendMultiRow* entry)
     } else {
         menu->hide();
     }
-    menu->setLastBtnCheckable(SUBMENU_FEE, true, entry->getSubtractFeeFromAmount());
+    menu->setBtnCheckable(SUBMENU_FEE, true, entry->getSubtractFeeFromAmount());
     menu->move(pos);
     menu->show();
 }

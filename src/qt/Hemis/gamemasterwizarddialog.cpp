@@ -680,3 +680,4 @@ GameMasterWizardDialog::~GameMasterWizardDialog()
     delete snackBar;
     delete ui;
 }
+}

@@ -229,7 +229,7 @@ bool GMModel::addGm(CGamemasterConfig::CGamemasterEntry* gme)
         return false;
 
     COutPoint collateralId = COutPoint(uint256S(gme->getTxHash()), uint32_t(nIndex));
-    CGamemaster* pgm = mnodeman.Find(collateralId);
+    CGamemaster* pgm = gamemasterman.Find(collateralId);
     nodes.append(GamemasterWrapper(
                  QString::fromStdString(gme->getAlias()),
                  QString::fromStdString(gme->getIp()),
@@ -402,7 +402,7 @@ CallResult<uint256> GMModel::createDGMInternal(const Optional<COutPoint>& collat
     }
 }
 
-CallResult<uint256> MNModel::createDGM(const std::string& alias,
+CallResult<uint256> GMModel::createDGM(const std::string& alias,
     const Optional<COutPoint>& collateral,
     const Optional<QString>& addr_label,
     std::string& serviceAddr,

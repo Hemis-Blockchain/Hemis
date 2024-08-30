@@ -2720,7 +2720,7 @@
   <customwidget>
    <class>ClickableLabel</class>
    <extends>QLabel</extends>
-   <header>qt/pivx/clickablelabel.h</header>
+   <header>qt/Hemis/clickablelabel.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

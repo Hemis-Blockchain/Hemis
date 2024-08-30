@@ -1,9 +1,8 @@
-// Copyright (c) 2019-2022 The Hemis Core developers
+// Copyright (c) 2019-2022 The PIVX developers
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include "qt/Hemis/tooltipmenu.h"
-#include "qt/Hemis/forms/ui_tooltipmenu.h"
 
 #include "qt/Hemis/qtutils.h"
 #include <QTimer>
@@ -76,7 +75,6 @@ void TooltipMenu::setBtnCheckable(uint8_t id, bool checkable, bool isChecked)
         btn->setCheckable(checkable);
         btn->setChecked(isChecked);
     }
-}
 }
 
 void TooltipMenu::hideTooltip()

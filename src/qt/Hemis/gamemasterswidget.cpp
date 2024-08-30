@@ -180,7 +180,7 @@ void GameMastersWidget::onGMClicked(const QModelIndex& _index)
     }
     index = _index;
     uint8_t gmType = index.sibling(index.row(), GMModel::TYPE).data(Qt::DisplayRole).toUInt();
-    menu->showHideBtn(0, mnType == GMViewType::LEGACY);
+    menu->showHideBtn(0, gmType == GMViewType::LEGACY);
     menu->move(pos);
     menu->show();
 

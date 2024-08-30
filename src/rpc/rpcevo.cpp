@@ -379,10 +379,6 @@ static UniValue ProTxRegister(const JSONRPCRequest& request, bool fSignAndSend)
     pl.nVersion = ProRegPL::CURRENT_VERSION;
     pl.collateralOutpoint = COutPoint(collateralHash, (uint32_t)collateralIndex);
 
-    CMutableTransaction tx;
-    tx.nVersion = CTransaction::TxVersion::SAPLING;
-    tx.nType = CTransaction::TxType::PROREG;
-
     // referencing unspent collateral outpoint
     Coin coin;
     if (!WITH_LOCK(cs_main, return pcoinsTip->GetUTXOCoin(pl.collateralOutpoint, coin); )) {
@@ -408,7 +404,7 @@ static UniValue ProTxRegister(const JSONRPCRequest& request, bool fSignAndSend)
     CMutableTransaction tx;
     tx.nVersion = CTransaction::TxVersion::SAPLING;
     tx.nType = CTransaction::TxType::PROREG;
-    CheckOpResult(FundSpecialTx(pwallet, tx, pl));(pwallet, tx, pl);
+    CheckOpResult(FundSpecialTx(pwallet, tx, pl));
 
     if (fSignAndSend) {
         CheckOpResult(SignSpecialTxPayloadByString(pl, keyCollateral)); // prove we own the collateral
@@ -482,7 +478,6 @@ UniValue protx_register_submit(const JSONRPCRequest& request)
 
     pl.vchSig = DecodeBase64(request.params[1].get_str().c_str());
 
-    // check the payload, add the tx inputs sigs, and send the tx.
     CheckOpResult(SignAndSendSpecialTx(pwallet, tx, pl), RPC_VERIFY_REJECTED);
     return tx.GetHash().GetHex();
 }
@@ -545,7 +540,6 @@ UniValue protx_register_fund(const JSONRPCRequest& request)
     assert(pl.collateralOutpoint.n != (uint32_t) -1);
     // update payload on tx (with final collateral outpoint)
     pl.vchSig.clear();
-    // check the payload, add the tx inputs sigs, and send the tx.
     CheckOpResult(SignAndSendSpecialTx(pwallet, tx, pl), RPC_VERIFY_REJECTED);
     return tx.GetHash().GetHex();
 }
@@ -762,11 +756,15 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     const std::string& strOpKey = request.params.size() > 3 ? request.params[3].get_str() : "";
     const CBLSSecretKey& operatorKey = GetBLSSecretKey(chainparams, strOpKey);
 
+    CMutableTransaction tx;
+    CheckOpResult(FundSpecialTx(pwallet, tx, pl));
+    CheckOpResult(SignSpecialTxPayloadByHash(tx, pl, operatorKey));
 
     FundSpecialTx(pwallet, tx, pl);
     SignSpecialTxPayloadByHash(tx, pl, operatorKey);
 
-    return SignAndSendSpecialTx(pwallet, tx, pl);
+    CheckOpResult(SignAndSendSpecialTx(pwallet, tx, pl), RPC_VERIFY_REJECTED);
+    return tx.GetHash().GetHex();
 }
 
 UniValue protx_update_registrar(const JSONRPCRequest& request)
@@ -840,8 +838,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     CheckOpResult(FundSpecialTx(pwallet, tx, pl));
     CheckOpResult(SignSpecialTxPayloadByHash(tx, pl, ownerKey));
 
-    CheckOpResult(SignAndSendSpecialTx(pwallet, tx, pl), RPC_VERIFY_REJECTED);
-    return tx.GetHash().GetHex();
+    return SignAndSendSpecialTx(pwallet, tx, pl);
 }
 
 UniValue protx_revoke(const JSONRPCRequest& request)

@@ -127,7 +127,7 @@ void GameMastersWidget::showEvent(QShowEvent *event)
 {
     if (!gmModel) return;
     const auto& updateList = [&](){
-        mnModel->updateGMList();
+        gmModel->updateGMList();
         updateListState();
     };
     updateList();
@@ -355,14 +355,14 @@ void GameMastersWidget::onInfoGMClicked()
     }
     dialog->setData(pubKey, label, address, txId, outIndex, status, opDGM);
     dialog->adjustSize();
-    showDialog(dialog, 3, 17);    bool isLegacy = ((uint8_t) index.sibling(index.row(), MNModel::TYPE).data(Qt::DisplayRole).toUInt()) == MNViewType::LEGACY;
-                                  Optional<DMNData> opDMN = nullopt;
+    showDialog(dialog, 3, 17);    bool isLegacy = ((uint8_t) index.sibling(index.row(), GMModel::TYPE).data(Qt::DisplayRole).toUInt()) == GMViewType::LEGACY;
+                                  Optional<DGMData> opDGM = nullopt;
                                   if (!isLegacy) {
-                                      QString proTxHash = index.sibling(index.row(), MNModel::PRO_TX_HASH).data(Qt::DisplayRole).toString();
-                                      opDMN = interfaces::g_tiertwo->getDMNData(uint256S(proTxHash.toStdString()),
+                                      QString proTxHash = index.sibling(index.row(), GMModel::PRO_TX_HASH).data(Qt::DisplayRole).toString();
+                                      opDGM = interfaces::g_tiertwo->getDGMData(uint256S(proTxHash.toStdString()),
                                                                                 clientModel->getLastBlockIndexProcessed());
                                   }
-                                  dialog->setData(pubKey, label, address, txId, outIndex, status, opDMN);
+                                  dialog->setData(pubKey, label, address, txId, outIndex, status, opDGM);
     if (dialog->exportGM) {
         QString legacyText = isLegacy ? tr(" Then start the Gamemaster using\nthis controller wallet (select the Gamemaster in the list and press \"start\").") : "";
         if (ask(tr("Remote Gamemaster Data"),
@@ -380,7 +380,7 @@ void GameMastersWidget::onInfoGMClicked()
             } else {
                 exportedGM += "gmoperatorprivatekey=" + QString::fromStdString(opDGM->operatorSk.empty() ? "<insert operator private key here>" : opDGM->operatorSk) + "\n";
             }
-            GUIUtil::setClipboard(exportedMN);
+            GUIUtil::setClipboard(exportedGM);
             inform(tr("Gamemaster data copied to the clipboard."));
         }
     }
@@ -463,7 +463,7 @@ void GameMastersWidget::onCreateGMClicked()
         gmModel->setCoinControl(coinControlDialog->coinControl);
     }
 
-    GameMasterWizardDialog* dialog = new GameMasterDialog(walletModel, mnModel, clientModel, window);
+    GameMasterWizardDialog* dialog = new GameMasterDialog(walletModel, gmModel, clientModel, window);
     connect(dialog, &GameMasterWizardDialog::message, this, &PWidget::emitMessage);
     do {
         showHideOp(true);

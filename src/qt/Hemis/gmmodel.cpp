@@ -907,7 +907,8 @@ bool GMModel::removeLegacyGM(const std::string& alias_to_remove, const std::stri
     rename(pathConfigFile, pathNewConfFile);
 
     // Unlock collateral
-    walletModel->unlockCoin(uint256S(tx_id), out_index);
+    COutPoint collateralOut(uint256S(tx_id), out_index);
+    walletModel->unlockCoin(uint256S(collateralOut);
     // Remove alias
     gamemasterConfig.remove(alias_to_remove);
     return true;

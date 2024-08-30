@@ -220,8 +220,7 @@ void GameMastersWidget::onEditGMClicked()
                     "Cannot start gamemaster, the collateral transaction has not been confirmed by the network yet.\n"
                     "Please wait few more minutes (gamemaster collaterals require %1 confirmations).")
                            .arg(
-                               gmModel->getGamemaster
-                               CollateralMinConf()));
+                               gmModel->getGamemasterCollateralMinConf()));
             }
         } else {
             // Deterministic

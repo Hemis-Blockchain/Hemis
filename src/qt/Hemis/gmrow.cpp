@@ -29,7 +29,7 @@ void GMRow::updateView(QString address,
     ui->labelAddress->setText(address);
     if (!wasCollateralAccepted) status = tr("Collateral tx not found");
     ui->labelDate->setText(tr("Status: %1").arg(status));
-    ui->btnIcon->setIcon(QIcon(type == GMViewType::LEGACY ? "://ic-lgm" : "://ic-dgm"))
+    ui->btnIcon->setIcon(QIcon(type == GMViewType::LEGACY ? "://ic-lgm" : "://ic-dgm"));
 }
 
 GMRow::~GMRow()

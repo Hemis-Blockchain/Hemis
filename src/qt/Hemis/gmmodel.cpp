@@ -3,20 +3,18 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "qt/Hemis/gmmodel.h"
-
-#include "coincontrol.h"
-
 #include "bls/key_io.h"
 #include "coincontrol.h"
 #include "evo/deterministicgms.h"
 #include "interfaces/tiertwo.h"
 #include "evo/specialtx_utils.h"
+
+#include "coincontrol.h"
 #include "gamemaster.h"
 #include "gamemasterman.h"
 #include "net.h" // for validateGamemasterIP
 #include "netbase.h"
 #include "operationresult.h"
-#include "primitives/transaction.h"
 #include "primitives/transaction.h"
 #include "qt/bitcoinunits.h"
 #include "qt/optionsmodel.h"
@@ -49,6 +47,7 @@ uint16_t GamemasterWrapper::getType() const
     // todo: add operator
     return type;
 }
+
 GMModel::GMModel(QObject *parent) : QAbstractTableModel(parent) {}
 
 void GMModel::init()
@@ -64,6 +63,7 @@ void GMModel::updateGMList()
     for (const CGamemasterConfig::CGamemasterEntry& gme : gamemasterConfig.getEntries()) {
         int nIndex;
         if (!gme.castOutputIndex(nIndex)) continue;
+
         const uint256& txHash = uint256S(gme.getTxHash());
         CTxIn txIn(txHash, uint32_t(nIndex));
         CGamemaster* pgm = gamemasterman.Find(txIn.prevout);
@@ -75,6 +75,7 @@ void GMModel::updateGMList()
                 Optional<QString>(QString::fromStdString(gme.getPubKeyStr())),
                 nullptr) // dgm view
         );
+
         if (walletModel) {
             collateralTxAccepted.insert(gme.getTxHash(), walletModel->getWalletTxDepth(txHash) >= gmMinConf);
         }
@@ -115,13 +116,19 @@ void GMModel::updateGMList()
                        index(nodes.size(), ColumnIndex::COLUMN_COUNT, QModelIndex()));
 }
 
+int GMModel::rowCount(const QModelIndex &parent) const
+{
+    if (parent.isValid())
+        return 0;
+    return nodes.size();
+}
+
 int GMModel::columnCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
         return 0;
     return ColumnIndex::COLUMN_COUNT;
 }
-
 static QString formatTooltip(const GamemasterWrapper& wrapper)
 {
     return QObject::tr((wrapper.getType() == GMViewType::LEGACY) ?
@@ -132,7 +139,7 @@ static QString formatTooltip(const GamemasterWrapper& wrapper)
 QVariant GMModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
-       return QVariant();
+        return QVariant();
 
     // rec could be null, always verify it.
     int row = index.row();
@@ -163,7 +170,7 @@ QVariant GMModel::data(const QModelIndex &index, int role) const
                         // Quick workaround to the current Gamemaster status types.
                         // If the status is REMOVE and there is no pubkey associated to the Gamemaster
                         // means that the GM is not in the network list and was created in
-                        // updateGMList(). Which.. denotes a not started gamemaster
+                        // updateGMList(). Which.. denotes a not started gamemaster.
                         // This will change in the future with the GamemasterWrapper introduction.
                         if (status == "REMOVE" && !gmWrapper.gamemaster->pubKeyCollateralAddress.IsValid()) {
                             return "MISSING";
@@ -202,13 +209,14 @@ QVariant GMModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+
 bool GMModel::removeGm(const QModelIndex& modelIndex)
 {
     int idx = modelIndex.row();
     beginRemoveRows(QModelIndex(), idx, idx);
     auto gmWrapper = nodes.at(idx);
     if (gmWrapper.collateralId) collateralTxAccepted.remove(gmWrapper.collateralId->hash.GetHex());
-    nodes.removeAt(idx);
+    nodes.removeAt(idx)
     endRemoveRows();
     Q_EMIT dataChanged(index(idx, 0, QModelIndex()), index(idx, 5, QModelIndex()) );
     return true;
@@ -483,7 +491,7 @@ bool GMModel::unbanDGM(CBLSSecretKey& operatorKey, uint256 proTxHash, std::strin
         return false;
     }
     if (!dgm->IsPoSeBanned()) {
-        strError = "Gamemaster is not Pose-banned";
+        strError = "Gamermaster is not Pose-banned";
         return false;
     }
     pl.addr = dgm->pdgmState->addr;

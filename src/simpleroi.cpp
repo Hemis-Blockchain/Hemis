@@ -7,6 +7,7 @@
 #include "validation.h"
 
 const int CSimpRoiArgs::nStakeRoiHrs = 3;	// 3 hour averaging for smooth stake values
+const int CSimpRoiArgs::nStakeRoi24Hrs = 24;	// 3 hour averaging for smooth stake values
 
 int64_t CSimpleRoi::getTimeDiff(CSimpRoiArgs& csra, uint64_t n_blocks, int nHeight)
 {
@@ -44,7 +45,7 @@ int CSimpleRoi::getsroi(CSimpRoiArgs& csra)
     int64_t nSmoothNetHashPS = (int64_t)(workDiff.getdouble() / timeDiff);
 
 // calculate network hashes per second over ~24hrs
-    uint64_t n_blocks = csra.nStakeRoi24Hrs * 86400 / nTargetSpacing;
+    uint64_t n_blocks = csra.nStakeRoi24Hrs * 3600 / nTargetSpacing;
     int64_t timeDiff = getTimeDiff(csra, n_blocks, nHeight);
     if (timeDiff <= 0) return -2;	// no negative or divide by zero exceptions
     arith_uint256 workDiff = csra.pb->nChainWork - csra.pb0->nChainWork;

@@ -13,6 +13,7 @@ public:					// things passed between functions
     float	nGMRoi;
     float	nStakingRoi;
     float	nSmoothRoi;
+    float   nSmoothRoi24Hrs;
     float	nBlocksPerDay;
     CBlockIndex *pb;
     CBlockIndex	*pb0;

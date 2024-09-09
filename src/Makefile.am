@@ -340,7 +340,9 @@ BITCOIN_CORE_H = \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h \
   zmq/zmqnotificationinterface.h \
-  zmq/zmqpublishnotifier.h
+  zmq/zmqpublishnotifier.h \
+  crypto/pbkdf2_hmac_sha512.h \
+  simpleroi.h
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
@@ -427,7 +429,8 @@ libbitcoin_server_a_SOURCES = \
   validation.cpp \
   validationinterface.cpp \
   $(BITCOIN_CORE_H) \
-  $(LIBSAPLING_H)
+  $(LIBSAPLING_H) \
+  bip32.cpp
 
 if ENABLE_ZMQ
 libbitcoin_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
@@ -463,7 +466,8 @@ libbitcoin_wallet_a_SOURCES = \
   stakeinput.cpp \
   zpiv/zpos.cpp \
   $(BITCOIN_CORE_H) \
-  $(LIBSAPLING_H)
+  $(LIBSAPLING_H) \
+  simpleroi.cpp
 
 # crypto primitives library
 crypto_libbitcoin_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(PIC_FLAGS)
@@ -587,7 +591,8 @@ libbitcoin_common_a_SOURCES = \
   spork.cpp \
   sporkdb.cpp \
   $(BITCOIN_CORE_H) \
-  $(LIBSAPLING_H)
+  $(LIBSAPLING_H) \
+  simpleroi.cpp
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc

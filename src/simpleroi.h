@@ -19,6 +19,7 @@ public:					// things passed between functions
     CAmount	mnCoins;
     CAmount	stakedCoins;
     CAmount	smoothCoins;
+    CAmount	smoothCoins24Hrs;
     static const int nStakeRoiHrs;	// initialized in simpleroi.cpp
     static const int nStakeRoi24Hrs;
 };

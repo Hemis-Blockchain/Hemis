@@ -286,6 +286,7 @@ BITCOIN_CORE_H = \
   shutdown.h \
   span.h \
   spork.h \
+  simpleroi.h \
   sporkdb.h \
   sporkid.h \
   stakeinput.h \
@@ -340,9 +341,7 @@ BITCOIN_CORE_H = \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h \
   zmq/zmqnotificationinterface.h \
-  zmq/zmqpublishnotifier.h \
-  crypto/pbkdf2_hmac_sha512.h \
-  simpleroi.h
+  zmq/zmqpublishnotifier.h
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
@@ -451,6 +450,7 @@ libbitcoin_wallet_a_SOURCES = \
   crypter.cpp \
   legacy/stakemodifier.cpp \
   kernel.cpp \
+  simpleroi.cpp \
   wallet/db.cpp \
   wallet/fees.cpp \
   wallet/init.cpp \
@@ -465,8 +465,7 @@ libbitcoin_wallet_a_SOURCES = \
   stakeinput.cpp \
   zpiv/zpos.cpp \
   $(BITCOIN_CORE_H) \
-  $(LIBSAPLING_H) \
-  simpleroi.cpp
+  $(LIBSAPLING_H)
 
 # crypto primitives library
 crypto_libbitcoin_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(PIC_FLAGS)
@@ -590,8 +589,7 @@ libbitcoin_common_a_SOURCES = \
   spork.cpp \
   sporkdb.cpp \
   $(BITCOIN_CORE_H) \
-  $(LIBSAPLING_H) \
-  simpleroi.cpp
+  $(LIBSAPLING_H)
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc

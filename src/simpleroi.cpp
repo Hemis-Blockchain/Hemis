@@ -39,17 +39,12 @@ int CSimpleRoi::getsroi(CSimpRoiArgs& csra)
 // calculate network hashes per second over ~3 hours -- set above
 //                                  hours in sec / minutes in sec
     uint64_t n_blocks = csra.nStakeRoiHrs * 3600 / nTargetSpacing;
-    int64_t timeDiff = getTimeDiff(csra, n_blocks, nHeight);
-    if (timeDiff <= 0) return -2;	// no negative or divide by zero exceptions
-    arith_uint256 workDiff = csra.pb->nChainWork - csra.pb0->nChainWork;
-    int64_t nSmoothNetHashPS = (int64_t)(workDiff.getdouble() / timeDiff);
-
-// calculate network hashes per second over ~24hrs
     uint64_t n_blocks = csra.nStakeRoi24Hrs * 3600 / nTargetSpacing;
     int64_t timeDiff = getTimeDiff(csra, n_blocks, nHeight);
     if (timeDiff <= 0) return -2;	// no negative or divide by zero exceptions
     arith_uint256 workDiff = csra.pb->nChainWork - csra.pb0->nChainWork;
     int64_t nSmoothNetHashPS = (int64_t)(workDiff.getdouble() / timeDiff);
+
 
 //LogPrintf("STAKE nb %d td %2" PRIu64 " smoothhash %4" PRId64 " \n", n_blocks, timeDiff, nSmoothNetHashPS);
 // -----------------------------------------------------------------------

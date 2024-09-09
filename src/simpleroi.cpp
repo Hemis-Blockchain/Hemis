@@ -42,6 +42,14 @@ int CSimpleRoi::getsroi(CSimpRoiArgs& csra)
     if (timeDiff <= 0) return -2;	// no negative or divide by zero exceptions
     arith_uint256 workDiff = csra.pb->nChainWork - csra.pb0->nChainWork;
     int64_t nSmoothNetHashPS = (int64_t)(workDiff.getdouble() / timeDiff);
+
+// calculate network hashes per second over ~24hrs
+    uint64_t n_blocks = csra.nStakeRoi24Hrs * 86400 / nTargetSpacing;
+    int64_t timeDiff = getTimeDiff(csra, n_blocks, nHeight);
+    if (timeDiff <= 0) return -2;	// no negative or divide by zero exceptions
+    arith_uint256 workDiff = csra.pb->nChainWork - csra.pb0->nChainWork;
+    int64_t nSmoothNetHashPS = (int64_t)(workDiff.getdouble() / timeDiff);
+
 //LogPrintf("STAKE nb %d td %2" PRIu64 " smoothhash %4" PRId64 " \n", n_blocks, timeDiff, nSmoothNetHashPS);
 // -----------------------------------------------------------------------
 // calculate network hashes per second over TargetTimespan
@@ -107,6 +115,7 @@ bool CSimpleRoi::generateROI(UniValue& roi, std::string& sGerror)
          return false;
     }
     roi.pushKV(strprintf("%d hour avg ROI", csra.nStakeRoiHrs), strprintf("%4.1f%%", csra.nSmoothRoi));
+    roi.pushKV(strprintf("%d hour avg ROI", csra.nStakeRoi24Hrs), strprintf("%4.1f%%", csra.nSmoothRoi));
     roi.pushKV(strprintf("%2d min stk ROI", Params().GetConsensus().TargetTimespan(csra.pb->nHeight) / 60), strprintf("%4.1f%%", csra.nStakingRoi));
     roi.pushKV("network  stake", CAmount2Kwithcommas(csra.smoothCoins));
     roi.pushKV("--------------","--------------");

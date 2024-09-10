@@ -92,9 +92,9 @@ UniValue getroi(const JSONRPCRequest& request)
                 sLine2 +
                 "  \"tot stake coin: nnnnnnnn\",          estimate of total staked coins\n"
                 "\n"
-                "  \"masternode ROI: nnnn.n%\",           masternode ROI\n"
-                "  \"tot collateral: nnnnnnnn\",          total masternode collateral\n"
-                "  \"enabled  nodes: nnnn\",              number of enabled masternodes\n"
+                "  \"gamemaster ROI: nnnn.n%\",           gamemaster ROI\n"
+                "  \"tot collateral: nnnnnnnn\",          total gamemaster collateral\n"
+                "  \"enabled  nodes: nnnn\",              number of enabled gamemaster\n"
                 "  \"blocks per day: nnnn.n\",            number of blocks per day\n"
                 "\n"
             );
@@ -106,7 +106,6 @@ UniValue getroi(const JSONRPCRequest& request)
     if (csimproi.generateROI(roi, sGerror)) return roi;
     throw std::runtime_error(sGerror);
 }
-
 
 
 UniValue bip39ToBip32(const JSONRPCRequest& request)

@@ -1,4 +1,3 @@
-
 // simpleroi.h
 #ifndef CSIMPLE_ROI_H
 #define CSIMPLE_ROI_H
@@ -14,13 +13,16 @@ public:					// things passed between functions
     float	nGMRoi;
     float	nStakingRoi;
     float	nSmoothRoi;
+    float   nSmoothRoi24Hrs;
     float	nBlocksPerDay;
     CBlockIndex *pb;
     CBlockIndex	*pb0;
     CAmount	mnCoins;
     CAmount	stakedCoins;
     CAmount	smoothCoins;
+    CAmount	smoothCoins24Hrs;
     static const int nStakeRoiHrs;	// initialized in simpleroi.cpp
+    static const int nStakeRoi24Hrs;
 };
 
 class CSimpleRoi

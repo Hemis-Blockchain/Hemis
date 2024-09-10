@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <iostream>
 #include <bitset>
+#include <algorithm>
 
 // Helper function to convert a binary string to a hexadecimal string
 std::string binaryToHex(const std::string& binary) {
@@ -95,13 +96,16 @@ bool validateMnemonicChecksum(const std::string& mnemonic) {
         words.push_back(word);
     }
 
-    // Convert words back to entropy + checksum binary string
+    // Ensure that each word in the mnemonic is in the BIP39 wordlist
     std::string binary;
     for (const std::string& word : words) {
+        // Use std::find to locate the word in the BIP39 wordlist
         auto it = std::find(bip39_wordlist.begin(), bip39_wordlist.end(), word);
         if (it == bip39_wordlist.end()) {
-            return false;  // Invalid word not found in BIP39 wordlist
+            return false;  // Invalid word, not found in the BIP39 wordlist
         }
+        
+        // Convert the index of the word into a binary representation
         int index = std::distance(bip39_wordlist.begin(), it);
         binary += std::bitset<11>(index).to_string();  // Convert index to 11-bit binary
     }

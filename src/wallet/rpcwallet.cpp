@@ -129,6 +129,11 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
     std::string mnemonic = request.params[0].get_str();
     std::string passphrase = request.params.size() > 1 ? request.params[1].get_str() : "";
 
+    // Validate the mnemonic checksum before proceeding
+    if (!validateMnemonicChecksum(mnemonic)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BIP39 mnemonic checksum.");
+    }
+
     // Generate the seed from the mnemonic and passphrase
     std::vector<unsigned char> seed = mnemonicToSeed(mnemonic, passphrase);
 

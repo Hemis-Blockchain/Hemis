@@ -431,7 +431,8 @@ libbitcoin_server_a_SOURCES = \
   $(BITCOIN_CORE_H) \
   $(LIBSAPLING_H) \
   bip32.cpp \
-  bip39.cpp
+  bip39.cpp \
+  simpleroi.cpp
 
 if ENABLE_ZMQ
 libbitcoin_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)

@@ -29,6 +29,19 @@ std::string sha256(const std::string& data) {
     return std::string((char*)hash, CSHA256::OUTPUT_SIZE);
 }
 
+// Convert mnemonic to seed
+std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std::string& passphrase) {
+    std::string salt = "mnemonic" + passphrase;
+    std::vector<unsigned char> seed(64);
+
+    // Replace PKCS5_PBKDF2_HMAC_SHA1 with PBKDF2_HMAC_SHA512
+    PBKDF2_HMAC_SHA512(mnemonic, salt, 2048, seed.size(), seed);
+
+    return seed;
+}
+
+
+
 // Generate a BIP39 mnemonic
 std::string generateMnemonic(int wordCount) {
     if (wordCount != 12 && wordCount != 15 && wordCount != 18 && wordCount != 21 && wordCount != 24) {

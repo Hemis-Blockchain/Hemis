@@ -24,10 +24,7 @@ std::string sha256(const std::string& data) {
 std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std::string& passphrase) {
     std::string salt = "mnemonic" + passphrase;
     std::vector<unsigned char> seed(64);
-
-    // PBKDF2 with HMAC-SHA512
     PBKDF2_HMAC_SHA512(mnemonic, salt, 2048, seed.size(), seed);
-
     return seed;
 }
 
@@ -37,38 +34,35 @@ std::string generateMnemonic(int wordCount) {
         throw std::runtime_error("Invalid number of words. Choose between 12, 15, 18, 21, or 24.");
     }
 
-    // Step 1: Calculate entropy size
-    int entropyBits = (wordCount / 3) * 32;
-    int checksumBits = entropyBits / 32;
-    int totalBits = entropyBits + checksumBits;
+    // Step 1: Calculate entropy size based on the word count
+    int entropyBits = (wordCount / 3) * 32;  // entropy bits = (wordCount / 3) * 32
+    int checksumBits = entropyBits / 32;  // checksum bits = entropyBits / 32
 
     // Step 2: Generate random entropy
     std::vector<unsigned char> entropy(entropyBits / 8);
     GetStrongRandBytes(entropy.data(), entropy.size());
 
-    // Step 3: Compute checksum
+    // Step 3: Compute checksum as first (checksumBits) bits of SHA256(entropy)
     std::string hash = sha256(std::string(entropy.begin(), entropy.end()));
     unsigned char checksum = hash[0];  // Take the first byte of the SHA256 hash
 
-    // Step 4: Append checksum to entropy
-    int lastByteIndex = entropy.size() - 1;
-    entropy[lastByteIndex] &= (0xFF << checksumBits);  // Clear last bits
-    entropy[lastByteIndex] |= (checksum >> (8 - checksumBits));  // Add checksum bits
-
-    // Step 5: Convert entropy + checksum to a binary string
+    // Step 4: Convert entropy + checksum to binary
     std::string binary;
     for (unsigned char c : entropy) {
-        binary += std::bitset<8>(c).to_string();  // Convert each byte to binary
+        binary += std::bitset<8>(c).to_string();  // Convert each byte to 8-bit binary
     }
 
-    // Step 6: Split binary string into 11-bit chunks and map to words
+    // Append checksum bits (first `checksumBits` of the SHA256 hash)
+    binary += std::bitset<8>(checksum).to_string().substr(0, checksumBits);
+
+    // Step 5: Split the binary string into 11-bit chunks and map to words
     std::vector<std::string> words;
-    for (size_t i = 0; i < totalBits; i += 11) {
-        int index = std::bitset<11>(binary.substr(i, 11)).to_ulong();  // Convert to index
-        words.push_back(bip39_wordlist[index]);  // Map to word in BIP39 wordlist
+    for (size_t i = 0; i < binary.size(); i += 11) {
+        int index = std::bitset<11>(binary.substr(i, 11)).to_ulong();  // Convert 11 bits to an integer
+        words.push_back(bip39_wordlist[index]);  // Map to word from the BIP39 wordlist
     }
 
-    // Step 7: Join words into a mnemonic string
+    // Step 6: Join words into a mnemonic string
     std::ostringstream oss;
     for (size_t i = 0; i < words.size(); ++i) {
         if (i != 0) oss << " ";
@@ -78,16 +72,16 @@ std::string generateMnemonic(int wordCount) {
     return oss.str();
 }
 
-// Helper function to validate the checksum of a BIP39 mnemonic
+// Validate BIP39 mnemonic
 bool validateMnemonicChecksum(const std::string& mnemonic) {
-    // Step 1: Split mnemonic into words
+    // Step 1: Split the mnemonic into words
     std::vector<std::string> words;
     std::istringstream iss(mnemonic);
     for (std::string word; iss >> word;) {
         words.push_back(word);
     }
 
-    // Step 2: Ensure valid word count
+    // Step 2: Ensure that the word count is valid
     if (words.size() != 12 && words.size() != 15 && words.size() != 18 && words.size() != 21 && words.size() != 24) {
         return false;
     }
@@ -97,13 +91,13 @@ bool validateMnemonicChecksum(const std::string& mnemonic) {
     for (const std::string& word : words) {
         auto it = std::find(bip39_wordlist.begin(), bip39_wordlist.end(), word);
         if (it == bip39_wordlist.end()) {
-            return false;  // Invalid word not found in BIP39 wordlist
+            return false;  // Word not found in BIP39 wordlist
         }
         int index = std::distance(bip39_wordlist.begin(), it);
-        binary += std::bitset<11>(index).to_string();  // Convert to 11-bit binary
+        binary += std::bitset<11>(index).to_string();  // Convert index to 11-bit binary
     }
 
-    // Step 4: Extract entropy and checksum from the binary string
+    // Step 4: Separate the entropy and checksum from the binary string
     int totalBits = words.size() * 11;
     int checksumBits = totalBits / 33;
     int entropyBits = totalBits - checksumBits;
@@ -111,16 +105,16 @@ bool validateMnemonicChecksum(const std::string& mnemonic) {
     std::string entropyBinary = binary.substr(0, entropyBits);
     std::string checksumBinary = binary.substr(entropyBits, checksumBits);
 
-    // Step 5: Convert entropy binary back to bytes
+    // Step 5: Convert the entropy binary back to bytes
     std::vector<unsigned char> entropy(entropyBits / 8);
     for (size_t i = 0; i < entropy.size(); ++i) {
         entropy[i] = std::bitset<8>(entropyBinary.substr(i * 8, 8)).to_ulong();
     }
 
-    // Step 6: Compute checksum of the entropy
+    // Step 6: Compute the checksum from the entropy's SHA256 hash
     std::string hash = sha256(std::string(entropy.begin(), entropy.end()));
     std::string calculatedChecksumBinary = std::bitset<8>(hash[0]).to_string().substr(0, checksumBits);
 
-    // Step 7: Compare checksums
+    // Step 7: Compare calculated checksum with the extracted checksum
     return checksumBinary == calculatedChecksumBinary;
 }

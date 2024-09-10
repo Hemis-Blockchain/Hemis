@@ -87,7 +87,6 @@ std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std
 }
 
 // Helper function to validate the checksum of a BIP39 mnemonic
-// Helper function to validate the checksum of a BIP39 mnemonic
 bool validateMnemonicChecksum(const std::string& mnemonic) {
     // Split mnemonic into words
     std::vector<std::string> words;
@@ -99,7 +98,7 @@ bool validateMnemonicChecksum(const std::string& mnemonic) {
     // Convert words back to entropy + checksum binary string
     std::string binary;
     for (const std::string& word : words) {
-        auto it = std::find(bip39_wordlist.begin(), bip39_wordlist.end(), word);
+        auto it = std::find(bip39_wordlist.begin(), bip39_wordlist.end(), std::string(word));  // Explicitly cast to std::string
         if (it == bip39_wordlist.end()) {
             return false;  // Invalid word not found in BIP39 wordlist
         }
@@ -129,3 +128,4 @@ bool validateMnemonicChecksum(const std::string& mnemonic) {
     // Compare the calculated checksum with the checksum from the mnemonic
     return checksumBinary == calculatedChecksumBinary;
 }
+

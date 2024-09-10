@@ -25,7 +25,6 @@ std::string sha256(const std::string& data) {
     sha256.Write((const unsigned char*)data.data(), data.size()).Finalize(hash);
     return std::string((char*)hash, CSHA256::OUTPUT_SIZE);
 }
-
 // Generate a BIP39 mnemonic
 std::string generateMnemonic(int wordCount) {
     if (wordCount != 12 && wordCount != 15 && wordCount != 18 && wordCount != 21 && wordCount != 24) {
@@ -36,18 +35,20 @@ std::string generateMnemonic(int wordCount) {
     int checksumBits = entropyBits / 32;
     int totalBits = entropyBits + checksumBits;
 
+    // Step 1: Generate entropy
     std::vector<unsigned char> entropy(entropyBits / 8);
-    GetStrongRandBytes(entropy.data(), entropy.size());  // Replaced RAND_bytes
+    GetStrongRandBytes(entropy.data(), entropy.size());
 
+    // Step 2: Compute checksum
     std::string hash = sha256(std::string(entropy.begin(), entropy.end()));
-    unsigned char checksum = hash[0];
+    unsigned char checksum = hash[0];  // Use the first byte of the hash
 
-    for (int i = 0; i < checksumBits; ++i) {
-        if (checksum & (1 << (7 - i))) {
-            entropy[entropy.size() - 1] |= (1 << i);
-        }
-    }
+    // Step 3: Append checksum to entropy (modify the last byte of entropy)
+    int lastByteIndex = entropy.size() - 1;
+    entropy[lastByteIndex] &= (0xFF << checksumBits);  // Clear the last checksumBits
+    entropy[lastByteIndex] |= (checksum >> (8 - checksumBits));  // Append checksum bits
 
+    // Step 4: Convert entropy + checksum to binary
     std::string binary;
     for (unsigned char c : entropy) {
         for (int i = 7; i >= 0; --i) {
@@ -55,12 +56,14 @@ std::string generateMnemonic(int wordCount) {
         }
     }
 
+    // Step 5: Split binary into 11-bit chunks and map to words
     std::vector<std::string> words;
-    for (size_t i = 0; i < binary.size(); i += 11) {
+    for (size_t i = 0; i < totalBits; i += 11) {
         int index = std::stoi(binary.substr(i, 11), nullptr, 2);
         words.push_back(bip39_wordlist[index]);
     }
 
+    // Step 6: Join words to create the mnemonic
     std::ostringstream oss;
     for (size_t i = 0; i < words.size(); ++i) {
         if (i != 0) oss << " ";

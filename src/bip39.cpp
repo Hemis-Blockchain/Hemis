@@ -10,6 +10,7 @@
 #include <iostream>
 #include <bitset>
 #include <algorithm>
+#include "bip39.h"
 
 // Helper function to convert a binary string to a hexadecimal string
 std::string binaryToHex(const std::string& binary) {

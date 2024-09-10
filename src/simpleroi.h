@@ -1,3 +1,4 @@
+
 // simpleroi.h
 #ifndef CSIMPLE_ROI_H
 #define CSIMPLE_ROI_H

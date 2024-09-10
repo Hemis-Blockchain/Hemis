@@ -8,6 +8,7 @@
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <bitset>
 
 // Helper function to convert a binary string to a hexadecimal string
 std::string binaryToHex(const std::string& binary) {
@@ -25,6 +26,7 @@ std::string sha256(const std::string& data) {
     sha256.Write((const unsigned char*)data.data(), data.size()).Finalize(hash);
     return std::string((char*)hash, CSHA256::OUTPUT_SIZE);
 }
+
 // Generate a BIP39 mnemonic
 std::string generateMnemonic(int wordCount) {
     if (wordCount != 12 && wordCount != 15 && wordCount != 18 && wordCount != 21 && wordCount != 24) {
@@ -59,8 +61,8 @@ std::string generateMnemonic(int wordCount) {
     // Step 5: Split binary into 11-bit chunks and map to words
     std::vector<std::string> words;
     for (size_t i = 0; i < totalBits; i += 11) {
-        int index = std::stoi(binary.substr(i, 11), nullptr, 2);
-        words.push_back(bip39_wordlist[index]);
+        int index = std::bitset<11>(binary.substr(i, 11)).to_ulong();  // Convert binary to index
+        words.push_back(bip39_wordlist[index]);  // Map to BIP39 wordlist
     }
 
     // Step 6: Join words to create the mnemonic
@@ -84,7 +86,6 @@ std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std
     return seed;
 }
 
-
 // Helper function to validate the checksum of a BIP39 mnemonic
 bool validateMnemonicChecksum(const std::string& mnemonic) {
     // Split mnemonic into words
@@ -102,8 +103,7 @@ bool validateMnemonicChecksum(const std::string& mnemonic) {
             return false;  // Invalid word not found in BIP39 wordlist
         }
         int index = std::distance(bip39_wordlist.begin(), it);
-        std::string wordBinary = std::bitset<11>(index).to_string();  // Each word maps to 11 bits
-        binary += wordBinary;
+        binary += std::bitset<11>(index).to_string();  // Convert index to 11-bit binary
     }
 
     // Calculate original entropy length

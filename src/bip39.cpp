@@ -87,6 +87,7 @@ std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std
 }
 
 // Helper function to validate the checksum of a BIP39 mnemonic
+// Helper function to validate the checksum of a BIP39 mnemonic
 bool validateMnemonicChecksum(const std::string& mnemonic) {
     // Split mnemonic into words
     std::vector<std::string> words;

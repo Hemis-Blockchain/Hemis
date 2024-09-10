@@ -286,6 +286,7 @@ BITCOIN_CORE_H = \
   shutdown.h \
   span.h \
   spork.h \
+  simpleroi.h \
   sporkdb.h \
   sporkid.h \
   stakeinput.h \
@@ -342,8 +343,7 @@ BITCOIN_CORE_H = \
   zmq/zmqnotificationinterface.h \
   zmq/zmqpublishnotifier.h \
   bip39_wordlist.h \
-  crypto/pbkdf2_hmac_sha512.h \
-  simpleroi.h
+  crypto/pbkdf2_hmac_sha512.h
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
@@ -432,8 +432,8 @@ libbitcoin_server_a_SOURCES = \
   $(BITCOIN_CORE_H) \
   $(LIBSAPLING_H) \
   bip32.cpp \
-  bip39.cpp \
-  simpleroi.cpp
+  bip39.cpp
+
 
 if ENABLE_ZMQ
 libbitcoin_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
@@ -455,6 +455,7 @@ libbitcoin_wallet_a_SOURCES = \
   crypter.cpp \
   legacy/stakemodifier.cpp \
   kernel.cpp \
+  simpleroi.cpp \
   wallet/db.cpp \
   wallet/fees.cpp \
   wallet/init.cpp \

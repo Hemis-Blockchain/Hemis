@@ -11,6 +11,8 @@
 #include <bitset>
 #include <algorithm>
 #include "bip39.h"
+#include <codecvt>
+#include <locale>
 
 // Helper function to compute SHA-256 hash using PIVX's built-in CSHA256
 std::string sha256(const std::string& data) {
@@ -20,11 +22,23 @@ std::string sha256(const std::string& data) {
     return std::string((char*)hash, CSHA256::OUTPUT_SIZE);
 }
 
-// Convert mnemonic to seed
+std::string normalizeString(const std::string& input) {
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    std::wstring wideStr = converter.from_bytes(input);
+    std::wstring normalizedStr = std::wstring(wideStr);  // Add NFKD normalization here
+    return converter.to_bytes(normalizedStr);
+}
+
 std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std::string& passphrase) {
-    std::string salt = "mnemonic" + passphrase;
+    // Normalize both the mnemonic and passphrase
+    std::string normalizedMnemonic = normalizeString(mnemonic);
+    std::string normalizedPassphrase = normalizeString(passphrase);
+
+    std::string salt = "mnemonic" + normalizedPassphrase;
     std::vector<unsigned char> seed(64);
-    PBKDF2_HMAC_SHA512(mnemonic, salt, 2048, seed.size(), seed);
+
+    PBKDF2_HMAC_SHA512(normalizedMnemonic, salt, 2048, seed.size(), seed);
+
     return seed;
 }
 

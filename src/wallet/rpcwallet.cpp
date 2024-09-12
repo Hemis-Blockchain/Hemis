@@ -4940,7 +4940,7 @@ static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           okSafe argNames
   //  --------------------- ------------------------    -----------------------    ------ --------
     { "wallet",             "getaddressinfo",           &getaddressinfo,           true,  {"address"} },
-    { "wallet",             "checkbip39seed",              &checkbip39seed,             {"mnemonic","passphrase"} },
+    { "wallet",             "checkbip39seed",           &checkbip39seed,           true,  {"mnemonic","passphrase"} },
     { "wallet",             "setautocombinethreshold",  &setautocombinethreshold,  false, {"enable","threshold"} },
     { "wallet",             "getautocombinethreshold",  &getautocombinethreshold,  false, {} },
     { "wallet",             "abandontransaction",       &abandontransaction,       false, {"txid"} },

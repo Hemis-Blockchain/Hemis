@@ -14,8 +14,6 @@
 #include <codecvt>
 #include <locale>
 
-
-
 // Helper function to compute SHA-256 hash using PIVX's built-in CSHA256
 std::string sha256(const std::string& data) {
     CSHA256 sha256;
@@ -24,36 +22,31 @@ std::string sha256(const std::string& data) {
     return std::string((char*)hash, CSHA256::OUTPUT_SIZE);
 }
 
-// Helper function to normalize a string (basic NFKD normalization)
+// Helper function to manually normalize a string (NFKD)
 std::string normalizeString(const std::string& input) {
+    // Replace this with manual normalization logic (no external libraries).
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    std::wstring wide_string = converter.from_bytes(input);
-
-    std::wstring normalized;
-    for (wchar_t c : wide_string) {
-        // Basic normalization: decompose accents and diacritics
-        // Here, we assume that characters with code points between 0x00C0 and 0x017F are accented Latin characters
-        if (c >= 0x00C0 && c <= 0x017F) {
-            // Decompose accented Latin characters (replace with their base forms)
-            if (c >= 0x00C0 && c <= 0x00C5) normalized += L'A'; // ÀÁÂÃÄÅ → A
-            else if (c == 0x00E0 || c == 0x00E1 || c == 0x00E2 || c == 0x00E3 || c == 0x00E4 || c == 0x00E5) normalized += L'a'; // àáâãäå → a
-            else if (c == 0x00C7) normalized += L'C'; // Ç → C
-            else if (c == 0x00E7) normalized += L'c'; // ç → c
-            // Add more mappings for other accented characters if needed...
-            else normalized += c;  // Default case for characters that don't need decomposition
+    std::wstring wideStr = converter.from_bytes(input);
+    std::wstring normalizedStr;
+    
+    for (wchar_t c : wideStr) {
+        if (c >= 0x00C0 && c <= 0x00FF) {
+            // Handle Latin characters with diacritics manually (NFKD-like normalization)
+            if (c == 0x00C0 || c == 0x00C1 || c == 0x00C2 || c == 0x00C3 || c == 0x00C4 || c == 0x00C5) normalizedStr += L'A';
+            else if (c == 0x00E0 || c == 0x00E1 || c == 0x00E2 || c == 0x00E3 || c == 0x00E4 || c == 0x00E5) normalizedStr += L'a';
+            // Add more mappings if needed...
+            else normalizedStr += c;  // Pass other characters as-is.
         } else {
-            // Non-accented characters stay the same
-            normalized += c;
+            normalizedStr += c;  // Non-diacritic characters pass through.
         }
     }
-
-    // Convert back to UTF-8
-    return converter.to_bytes(normalized);
+    
+    return converter.to_bytes(normalizedStr);  // Convert back to UTF-8.
 }
 
 // Convert mnemonic to seed
 std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std::string& passphrase) {
-    // Normalize both mnemonic and passphrase
+    // Normalize both mnemonic and passphrase (NFKD normalization)
     std::string normalizedMnemonic = normalizeString(mnemonic);
     std::string normalizedPassphrase = normalizeString(passphrase);
 
@@ -63,7 +56,7 @@ std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std
     // Prepare a vector to store the seed (64 bytes)
     std::vector<unsigned char> seed(64);
 
-    // Use PBKDF2_HMAC_SHA512 (from crypto library in your project) to generate the seed
+    // Use PBKDF2-HMAC-SHA512 to generate the seed
     PBKDF2_HMAC_SHA512(
         normalizedMnemonic,  // Normalized mnemonic
         salt,                // Salt (mnemonic + passphrase)

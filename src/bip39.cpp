@@ -1,7 +1,7 @@
 #include "crypto/sha256.h"
 #include "crypto/hmac_sha512.h"
 #include "random.h"
-#include "crypto/pbkdf2_hmac_sha512.h"
+#include "crypto/pbkdf2_hmac_sha512.h" // Include the existing PBKDF2 implementation
 #include "bip39_wordlist.h"
 #include <vector>
 #include <string>
@@ -15,7 +15,6 @@
 #include <locale>
 #include <unicode/unistr.h>
 #include <unicode/normalizer2.h>
-#include "openssl/evp.h"
 
 // Helper function to compute SHA-256 hash using PIVX's built-in CSHA256
 std::string sha256(const std::string& data) {
@@ -47,21 +46,26 @@ std::string normalizeString(const std::string& input) {
     return result;
 }
 
-// Use mnemonic_to_seed function for generating seed from mnemonic
+// Use the PIVX PBKDF2_HMAC_SHA512 implementation
 std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std::string& passphrase) {
     // Normalize both mnemonic and passphrase using NFKD normalization
     std::string normalizedMnemonic = normalizeString(mnemonic);
     std::string normalizedPassphrase = normalizeString(passphrase);
 
-    // Convert the mnemonic to seed using the mnemonic_to_seed function
-    std::string seedHex = mnemonic_to_seed(normalizedMnemonic, normalizedPassphrase);
+    // Salt is "mnemonic" + normalized passphrase
+    std::string salt = "mnemonic" + normalizedPassphrase;
 
-    // Convert the seed from hex string to byte vector
-    std::vector<unsigned char> seed;
-    for (size_t i = 0; i < seedHex.size(); i += 2) {
-        unsigned char byte = std::stoi(seedHex.substr(i, 2), nullptr, 16);
-        seed.push_back(byte);
-    }
+    // Prepare a vector to store the seed (64 bytes)
+    std::vector<unsigned char> seed(64);
+
+    // Use PBKDF2-HMAC-SHA512 to generate the seed
+    PBKDF2_HMAC_SHA512(
+        normalizedMnemonic,  // Normalized mnemonic
+        salt,                // Salt (mnemonic + passphrase)
+        2048,                // Iteration count (BIP39 standard)
+        seed.size(),         // Output size (64 bytes)
+        seed.data()          // Output buffer for the seed
+    );
 
     return seed;
 }

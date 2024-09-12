@@ -502,7 +502,7 @@ void ScriptPubKeyMan::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& metada
     // use hardened derivation (child keys >= 0x80000000 are hardened after bip32)
     masterKey.Derive(purposeKey, 44 | BIP32_HARDENED_KEY_LIMIT);
     // derive m/purpose'/coin_type'
-    purposeKey.Derive(cointypeKey, 119 | BIP32_HARDENED_KEY_LIMIT);
+    purposeKey.Derive(cointypeKey, 684 | BIP32_HARDENED_KEY_LIMIT);
     // derive m/purpose'/coin_type'/account' // Hardcoded to account 0 for now.
     cointypeKey.Derive(accountKey, nAccountNumber | BIP32_HARDENED_KEY_LIMIT);
     // derive m/purpose'/coin_type'/account'/change'
@@ -516,7 +516,7 @@ void ScriptPubKeyMan::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& metada
 
         // m/44'/119'/account_num/change'/<n>'
         metadata.key_origin.path.push_back(44 | BIP32_HARDENED_KEY_LIMIT);
-        metadata.key_origin.path.push_back(119 | BIP32_HARDENED_KEY_LIMIT);
+        metadata.key_origin.path.push_back(684 | BIP32_HARDENED_KEY_LIMIT);
         metadata.key_origin.path.push_back(nAccountNumber | BIP32_HARDENED_KEY_LIMIT);
         // Child chain counter
         uint32_t& chainCounter = hdChain.GetChainCounter(changeType);

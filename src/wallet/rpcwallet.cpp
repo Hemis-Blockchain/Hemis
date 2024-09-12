@@ -103,8 +103,8 @@ UniValue checkbip39seed(const JSONRPCRequest& request)
     // Normalize and generate the seed
     std::vector<unsigned char> seed = mnemonicToSeed(mnemonic, passphrase);
 
-    // Convert the seed to a hex string
-    std::string seedHex = HexStr(seed.begin(), seed.end());
+    // Convert the seed to a hex string using MakeUCharSpan
+    std::string seedHex = HexStr(MakeUCharSpan(seed));
 
     // Return the seed in hex format
     return seedHex;

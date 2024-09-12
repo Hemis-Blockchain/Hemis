@@ -46,7 +46,6 @@ std::string normalizeString(const std::string& input) {
     return result;
 }
 
-// Use the PIVX PBKDF2_HMAC_SHA512 implementation
 std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std::string& passphrase) {
     // Normalize both mnemonic and passphrase using NFKD normalization
     std::string normalizedMnemonic = normalizeString(mnemonic);
@@ -64,7 +63,7 @@ std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std
         salt,                // Salt (mnemonic + passphrase)
         2048,                // Iteration count (BIP39 standard)
         seed.size(),         // Output size (64 bytes)
-        seed.data()          // Output buffer for the seed
+        seed                 // Pass the vector itself, not the raw pointer
     );
 
     return seed;

@@ -13,6 +13,9 @@
 #include "bip39.h"
 #include <codecvt>
 #include <locale>
+#include <unicode/unistr.h>
+#include <unicode/normalizer2.h>
+
 
 // Helper function to compute SHA-256 hash using PIVX's built-in CSHA256
 std::string sha256(const std::string& data) {
@@ -22,18 +25,31 @@ std::string sha256(const std::string& data) {
     return std::string((char*)hash, CSHA256::OUTPUT_SIZE);
 }
 
-// NFKD normalization
+// Proper NFKD normalization using ICU library
 std::string normalizeString(const std::string& input) {
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> converter;
-    std::wstring wideStr = converter.from_bytes(input);
-    // Convert wide string back to UTF-8 after basic decomposition
-    std::wstring normalizedStr = std::wstring(wideStr);
-    return converter.to_bytes(normalizedStr);
+    UErrorCode error = U_ZERO_ERROR;
+    const icu::Normalizer2* normalizer = icu::Normalizer2::getInstance(NULL, "nfkd", UNORM2_COMPOSE, error);
+
+    if (U_FAILURE(error)) {
+        throw std::runtime_error("NFKD Normalizer instance failed to initialize");
+    }
+
+    icu::UnicodeString unicodeInput = icu::UnicodeString::fromUTF8(input);
+    icu::UnicodeString normalized;
+
+    normalizer->normalize(unicodeInput, normalized, error);
+    if (U_FAILURE(error)) {
+        throw std::runtime_error("String normalization failed");
+    }
+
+    std::string result;
+    normalized.toUTF8String(result);
+    return result;
 }
 
 // Convert mnemonic to seed
 std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std::string& passphrase) {
-    // Normalize both mnemonic and passphrase (NFKD normalization)
+    // Normalize both mnemonic and passphrase using NFKD normalization
     std::string normalizedMnemonic = normalizeString(mnemonic);
     std::string normalizedPassphrase = normalizeString(passphrase);
 

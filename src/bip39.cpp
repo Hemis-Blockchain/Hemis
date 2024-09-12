@@ -13,7 +13,7 @@
 #include "bip39.h"
 #include <codecvt>
 #include <locale>
-#include <openssl/evp.h>
+
 
 // Helper function to compute SHA-256 hash using PIVX's built-in CSHA256
 std::string sha256(const std::string& data) {
@@ -54,7 +54,7 @@ std::string normalizeString(const std::string& input) {
     return converter.to_bytes(normalized);
 }
 
-// Function to convert mnemonic to seed
+// Function to convert mnemonic to seed without OpenSSL
 std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std::string& passphrase) {
     // Normalize both mnemonic and passphrase (NFKD normalization)
     std::string normalizedMnemonic = normalizeString(mnemonic);
@@ -63,17 +63,16 @@ std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std
     // Salt is "mnemonic" + normalized passphrase
     std::string salt = "mnemonic" + normalizedPassphrase;
 
+    // Prepare a vector to store the seed (64 bytes)
     std::vector<unsigned char> seed(64);
 
-    // Perform PBKDF2-HMAC-SHA512 using OpenSSL's implementation
-    PKCS5_PBKDF2_HMAC_SHA1(
-        normalizedMnemonic.c_str(),
-        normalizedMnemonic.size(),
-        reinterpret_cast<const unsigned char*>(salt.c_str()),
-        salt.size(),
-        2048,
-        64,
-        seed.data()
+    // Use PBKDF2_HMAC_SHA512 (from crypto library in your project) to generate the seed
+    PBKDF2_HMAC_SHA512(
+        normalizedMnemonic,  // Normalized mnemonic
+        salt,                // Salt (mnemonic + passphrase)
+        2048,                // Iteration count
+        seed.size(),         // Output size (64 bytes)
+        seed                 // Output buffer for the seed
     );
 
     return seed;

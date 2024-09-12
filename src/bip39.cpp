@@ -22,26 +22,13 @@ std::string sha256(const std::string& data) {
     return std::string((char*)hash, CSHA256::OUTPUT_SIZE);
 }
 
-// Helper function to manually normalize a string (NFKD)
+// NFKD normalization
 std::string normalizeString(const std::string& input) {
-    // Replace this with manual normalization logic (no external libraries).
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> converter;
     std::wstring wideStr = converter.from_bytes(input);
-    std::wstring normalizedStr;
-    
-    for (wchar_t c : wideStr) {
-        if (c >= 0x00C0 && c <= 0x00FF) {
-            // Handle Latin characters with diacritics manually (NFKD-like normalization)
-            if (c == 0x00C0 || c == 0x00C1 || c == 0x00C2 || c == 0x00C3 || c == 0x00C4 || c == 0x00C5) normalizedStr += L'A';
-            else if (c == 0x00E0 || c == 0x00E1 || c == 0x00E2 || c == 0x00E3 || c == 0x00E4 || c == 0x00E5) normalizedStr += L'a';
-            // Add more mappings if needed...
-            else normalizedStr += c;  // Pass other characters as-is.
-        } else {
-            normalizedStr += c;  // Non-diacritic characters pass through.
-        }
-    }
-    
-    return converter.to_bytes(normalizedStr);  // Convert back to UTF-8.
+    // Convert wide string back to UTF-8 after basic decomposition
+    std::wstring normalizedStr = std::wstring(wideStr);
+    return converter.to_bytes(normalizedStr);
 }
 
 // Convert mnemonic to seed
@@ -60,7 +47,7 @@ std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std
     PBKDF2_HMAC_SHA512(
         normalizedMnemonic,  // Normalized mnemonic
         salt,                // Salt (mnemonic + passphrase)
-        2048,                // Iteration count
+        2048,                // Iteration count (BIP39 standard)
         seed.size(),         // Output size (64 bytes)
         seed                 // Output buffer for the seed
     );

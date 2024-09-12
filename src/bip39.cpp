@@ -13,7 +13,7 @@
 #include "bip39.h"
 #include <codecvt>
 #include <locale>
-#include <boost/locale.hpp>
+
 
 // Helper function to compute SHA-256 hash using PIVX's built-in CSHA256
 std::string sha256(const std::string& data) {
@@ -43,9 +43,31 @@ std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std
     return seed;
 }
 */
-
+// Helper function to normalize a string (basic NFKD normalization)
 std::string normalizeString(const std::string& input) {
-    return boost::locale::normalize(input, boost::locale::norm_nfd);  // Proper NFKD normalization
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    std::wstring wide_string = converter.from_bytes(input);
+
+    std::wstring normalized;
+    for (wchar_t c : wide_string) {
+        // Basic normalization: decompose accents and diacritics
+        // Here, we assume that characters with code points between 0x00C0 and 0x017F are accented Latin characters
+        if (c >= 0x00C0 && c <= 0x017F) {
+            // Decompose accented Latin characters (replace with their base forms)
+            if (c >= 0x00C0 && c <= 0x00C5) normalized += L'A'; // ÀÁÂÃÄÅ → A
+            else if (c == 0x00E0 || c == 0x00E1 || c == 0x00E2 || c == 0x00E3 || c == 0x00E4 || c == 0x00E5) normalized += L'a'; // àáâãäå → a
+            else if (c == 0x00C7) normalized += L'C'; // Ç → C
+            else if (c == 0x00E7) normalized += L'c'; // ç → c
+            // Add more mappings for other accented characters if needed...
+            else normalized += c;  // Default case for characters that don't need decomposition
+        } else {
+            // Non-accented characters stay the same
+            normalized += c;
+        }
+    }
+
+    // Convert back to UTF-8
+    return converter.to_bytes(normalized);
 }
 
 // Convert mnemonic to seed

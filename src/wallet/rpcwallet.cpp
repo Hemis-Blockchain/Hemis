@@ -75,6 +75,41 @@ bool EnsureWalletIsAvailable(CWallet* const pwallet, bool avoidException)
         "Wallet file not specified (must request wallet RPC through /wallet/<filename> uri-path).");
 }
 
+// checkbip39seed "mnemonic" ( "passphrase" )
+UniValue checkbip39seed(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "checkbip39seed \"mnemonic\" ( \"passphrase\" )\n"
+            "\nCalculates the BIP39 seed from a given mnemonic and optional passphrase.\n"
+            "\nArguments:\n"
+            "1. \"mnemonic\"        (string, required) The BIP39 mnemonic (12 to 24 words)\n"
+            "2. \"passphrase\"      (string, optional) The optional passphrase\n"
+            "\nResult:\n"
+            "\"seed\"              (string) The calculated seed in hex format.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("checkbip39seed", "\"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about\"")
+            + HelpExampleRpc("checkbip39seed", "\"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about\""));
+
+    // Get the mnemonic from the first parameter
+    std::string mnemonic = request.params[0].get_str();
+
+    // Get the optional passphrase from the second parameter (default to empty string)
+    std::string passphrase = "";
+    if (request.params.size() > 1) {
+        passphrase = request.params[1].get_str();
+    }
+
+    // Normalize and generate the seed
+    std::vector<unsigned char> seed = mnemonicToSeed(mnemonic, passphrase);
+
+    // Convert the seed to a hex string
+    std::string seedHex = HexStr(seed.begin(), seed.end());
+
+    // Return the seed in hex format
+    return seedHex;
+}
+
 UniValue getroi(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 0) {
@@ -4905,6 +4940,7 @@ static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           okSafe argNames
   //  --------------------- ------------------------    -----------------------    ------ --------
     { "wallet",             "getaddressinfo",           &getaddressinfo,           true,  {"address"} },
+    { "wallet",             "checkbip39seed",              &checkbip39seed,             {"mnemonic","passphrase"} },
     { "wallet",             "setautocombinethreshold",  &setautocombinethreshold,  false, {"enable","threshold"} },
     { "wallet",             "getautocombinethreshold",  &getautocombinethreshold,  false, {} },
     { "wallet",             "abandontransaction",       &abandontransaction,       false, {"txid"} },

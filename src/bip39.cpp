@@ -13,6 +13,7 @@
 #include "bip39.h"
 #include <codecvt>
 #include <locale>
+#include <openssl/evp.h>
 
 // Helper function to compute SHA-256 hash using PIVX's built-in CSHA256
 std::string sha256(const std::string& data) {

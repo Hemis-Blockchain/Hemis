@@ -142,7 +142,7 @@ UniValue getroi(const JSONRPCRequest& request)
     throw std::runtime_error(sGerror);
 }
 
-
+/*
 UniValue bip39ToBip32(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
@@ -227,6 +227,111 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
     result.pushKV("mnemonic", mnemonic);
     result.pushKV("seed", HexStr(seed));
     result.pushKV("new_seed", wifKey);
+
+    return result;
+}
+*/
+
+UniValue bip39ToBip32(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "bip39tobip32 \"mnemonic\" ( \"passphrase\" )\n"
+            "\nConverts a BIP39 mnemonic to a BIP32 extended master private key and sets it as the HD seed.\n"
+            "\nArguments:\n"
+            "1. \"mnemonic\"       (string, required) The BIP39 mnemonic\n"
+            "2. \"passphrase\"     (string, optional) Optional passphrase\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"extended_master_private_key\": \"...\", (string) The BIP32 extended master private key\n"
+            "  \"extended_master_public_key\": \"...\", (string) The BIP32 extended master public key\n"
+            "  \"new_seed\": \"...\", (string) The new HD seed set in the wallet\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bip39tobip32", "\"your mnemonic seed\"")
+            + HelpExampleRpc("bip39tobip32", "\"your mnemonic seed\"")
+        );
+
+    std::string mnemonic = request.params[0].get_str();
+    std::string passphrase = request.params.size() > 1 ? request.params[1].get_str() : "";
+
+    // Step 1: Validate the mnemonic checksum before proceeding
+    if (!validateMnemonicChecksum(mnemonic)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BIP39 mnemonic checksum.");
+    }
+    LogPrintf("DEBUG: Mnemonic checksum is valid\n");
+
+    // Step 2: Generate the seed from the mnemonic and passphrase
+    LogPrintf("DEBUG: Generating seed from mnemonic...\n");
+    std::vector<unsigned char> seed = mnemonicToSeed(mnemonic, passphrase);
+    LogPrintf("DEBUG: Seed (hex): %s\n", HexStr(seed).c_str());
+
+    // Step 3: Convert seed to BIP32 extended master private key
+    LogPrintf("DEBUG: Converting seed to BIP32 extended master private key...\n");
+    CExtKey masterKey;
+    masterKey.SetSeed(seed.data(), seed.size());
+
+    // Step 4: Convert the master key to a WIF private key for debug purposes
+    CKey key = masterKey.key;
+    std::string wifKey = KeyIO::EncodeSecret(key);
+    LogPrintf("DEBUG: WIF private key: %s\n", wifKey.c_str());
+
+    // Step 5: Set the new HD seed in the wallet
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot access wallet");
+    }
+
+    EnsureWalletIsUnlocked(pwallet);
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    // Mark wallet as dirty
+    pwallet->MarkDirty();
+
+    // Step 6: Get the corresponding public key
+    CPubKey pubkey = key.GetPubKey();
+    assert(key.VerifyPubKey(pubkey));
+    CKeyID vchAddress = pubkey.GetID();
+
+    LogPrintf("DEBUG: Derived public key (hex): %s\n", HexStr(pubkey).c_str());
+    LogPrintf("DEBUG: Derived public key address: %s\n", EncodeDestination(vchAddress).c_str());
+
+    // Step 7: Add the public key to the address book
+    pwallet->SetAddressBook(vchAddress, "HD Seed", AddressBook::AddressBookPurpose::RECEIVE);
+
+    if (!pwallet->HaveKey(vchAddress)) {
+        pwallet->UpdateTimeFirstKey(1);
+        pwallet->mapKeyMetadata[vchAddress].nCreateTime = 1;
+
+        if (!pwallet->AddKeyPubKey(key, pubkey)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
+        }
+    }
+
+    // Step 8: Set the HD Seed and regenerate the keypool manually
+    LogPrintf("DEBUG: Setting HD seed and regenerating keypool...\n");
+    ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan();
+    spk_man->SetHDSeed(pubkey, true);
+
+    // Clear the current keypool and regenerate new keys
+    spk_man->NewKeyPool();  // Same as in the sethdseed command
+    LogPrintf("DEBUG: Keypool regenerated successfully\n");
+
+    // Step 9: Update Sapling chain if necessary
+    SaplingScriptPubKeyMan* sspk_man = pwallet->CanSupportFeature(FEATURE_SAPLING) ?
+                                       pwallet->GetSaplingScriptPubKeyMan() : nullptr;
+    if (sspk_man) {
+        LogPrintf("DEBUG: Updating Sapling HD seed...\n");
+        sspk_man->SetHDSeed(pubkey, true);
+    }
+
+    // Step 10: Return debug information to the user
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("mnemonic", mnemonic);
+    result.pushKV("seed", HexStr(seed));
+    result.pushKV("new_seed", wifKey);
+    result.pushKV("derived_public_key", HexStr(pubkey));
+    result.pushKV("public_address", EncodeDestination(vchAddress));
 
     return result;
 }

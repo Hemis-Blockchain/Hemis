@@ -54,7 +54,7 @@ std::string normalizeString(const std::string& input) {
     return converter.to_bytes(normalized);
 }
 
-// Function to convert mnemonic to seed without OpenSSL
+// Convert mnemonic to seed
 std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std::string& passphrase) {
     // Normalize both mnemonic and passphrase (NFKD normalization)
     std::string normalizedMnemonic = normalizeString(mnemonic);

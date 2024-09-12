@@ -272,9 +272,9 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
     masterKey.SetSeed(seed.data(), seed.size());
     
     // Step 4: Obtain the BIP32 extended private and public keys
-    std::string extPrivKey = masterKey.ToString();
-    CExtPubKey masterPubKey = masterKey.Neutered();
-    std::string extPubKey = masterPubKey.ToString();
+    std::string extPrivKey = EncodeExtKey(masterKey);   // Use EncodeExtKey to get the Base58-encoded private key
+    CExtPubKey masterPubKey = masterKey.Neuter();       // Neuter() to get the corresponding public key
+    std::string extPubKey = EncodeExtPubKey(masterPubKey); // Use EncodeExtPubKey to get the Base58-encoded public key
 
     LogPrintf("DEBUG: BIP32 extended master private key: %s\n", extPrivKey.c_str());
     LogPrintf("DEBUG: BIP32 extended master public key: %s\n", extPubKey.c_str());
@@ -338,6 +338,7 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
 
     return result;
 }
+
 
 
 

@@ -21,7 +21,7 @@ std::string sha256(const std::string& data) {
     sha256.Write((const unsigned char*)data.data(), data.size()).Finalize(hash);
     return std::string((char*)hash, CSHA256::OUTPUT_SIZE);
 }
-
+/*
 std::string normalizeString(const std::string& input) {
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
     std::wstring wideStr = converter.from_bytes(input);
@@ -38,6 +38,42 @@ std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std
     std::vector<unsigned char> seed(64);
 
     PBKDF2_HMAC_SHA512(normalizedMnemonic, salt, 2048, seed.size(), seed);
+
+    return seed;
+}
+*/
+
+// Helper function to normalize a string using NFKD
+std::string normalizeString(const std::string& input) {
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    std::wstring wide_string = converter.from_bytes(input);
+    std::wstring normalized = std::wstring(wide_string);  // Assuming NFKD normalization
+
+    // Convert back to UTF-8
+    return converter.to_bytes(normalized);
+}
+
+// Function to convert mnemonic to seed
+std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std::string& passphrase) {
+    // Normalize both mnemonic and passphrase (NFKD normalization)
+    std::string normalizedMnemonic = normalizeString(mnemonic);
+    std::string normalizedPassphrase = normalizeString(passphrase);
+
+    // Salt is "mnemonic" + normalized passphrase
+    std::string salt = "mnemonic" + normalizedPassphrase;
+
+    std::vector<unsigned char> seed(64);
+
+    // Perform PBKDF2-HMAC-SHA512 using OpenSSL's implementation
+    PKCS5_PBKDF2_HMAC_SHA1(
+        normalizedMnemonic.c_str(),
+        normalizedMnemonic.size(),
+        reinterpret_cast<const unsigned char*>(salt.c_str()),
+        salt.size(),
+        2048,
+        64,
+        seed.data()
+    );
 
     return seed;
 }

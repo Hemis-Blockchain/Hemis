@@ -13,7 +13,7 @@
 #include "bip39.h"
 #include <codecvt>
 #include <locale>
-
+#include <boost/locale.hpp>
 
 // Helper function to compute SHA-256 hash using PIVX's built-in CSHA256
 std::string sha256(const std::string& data) {
@@ -44,14 +44,8 @@ std::vector<unsigned char> mnemonicToSeed(const std::string& mnemonic, const std
 }
 */
 
-// Helper function to normalize a string using NFKD
 std::string normalizeString(const std::string& input) {
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    std::wstring wide_string = converter.from_bytes(input);
-    std::wstring normalized = std::wstring(wide_string);  // Assuming NFKD normalization
-
-    // Convert back to UTF-8
-    return converter.to_bytes(normalized);
+    return boost::locale::normalize(input, boost::locale::norm_nfd);  // Proper NFKD normalization
 }
 
 // Convert mnemonic to seed

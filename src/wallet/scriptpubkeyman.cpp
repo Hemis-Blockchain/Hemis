@@ -506,7 +506,7 @@ void ScriptPubKeyMan::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& metada
     // derive m/purpose'/coin_type'/account' // Hardcoded to account 0 for now.
     cointypeKey.Derive(accountKey, nAccountNumber | BIP32_HARDENED_KEY_LIMIT);
     // derive m/purpose'/coin_type'/account'/change'
-    accountKey.Derive(changeKey,  changeType | BIP32_HARDENED_KEY_LIMIT);
+    accountKey.Derive(changeKey,  changeType);
 
     // derive child key at next index, skip keys already known to the wallet
     do {
@@ -520,9 +520,9 @@ void ScriptPubKeyMan::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& metada
         metadata.key_origin.path.push_back(nAccountNumber | BIP32_HARDENED_KEY_LIMIT);
         // Child chain counter
         uint32_t& chainCounter = hdChain.GetChainCounter(changeType);
-        changeKey.Derive(childKey, chainCounter | BIP32_HARDENED_KEY_LIMIT);
-        metadata.key_origin.path.push_back( changeType | BIP32_HARDENED_KEY_LIMIT);
-        metadata.key_origin.path.push_back(chainCounter | BIP32_HARDENED_KEY_LIMIT);
+        changeKey.Derive(childKey, chainCounter);
+        metadata.key_origin.path.push_back( changeType);
+        metadata.key_origin.path.push_back(chainCounter);
         chainCounter++;
 
     } while (wallet->HaveKey(childKey.key.GetPubKey().GetID()));

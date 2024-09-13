@@ -79,6 +79,95 @@ std::string VectorToHexStr(const std::vector<unsigned char>& data) {
     return HexStr(Span<const unsigned char>(data));
 }
 
+// Function to compare and log differences between the default and custom implementations
+UniValue test_bip39_bip32(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            "test_bip39_bip32\n"
+            "Tests BIP39 to seed, BIP32 extended private/public keys, and logs differences between the default and custom implementations.\n"
+        );
+
+    // 1. Generate a mnemonic (using 12 words for simplicity)
+    std::string mnemonic = generateMnemonic(12);  // Custom mnemonic generator (adjust for word count)
+    std::string passphrase = "test_passphrase";
+
+    // 2. Compute seed using the built-in implementation
+    std::vector<unsigned char> seed_builtin = mnemonicToSeed(mnemonic, passphrase);
+
+    // 3. Compute seed using the custom implementation
+    std::vector<uint8_t> seed_custom = pbkdf2_hmac_sha512(mnemonic, std::vector<uint8_t>(passphrase.begin(), passphrase.end()), 2048, 64);
+
+    // 4. Compare the seeds
+    bool seed_matches = (seed_builtin == seed_custom);
+
+    // Generate BIP32 extended private/public keys (default and custom)
+    std::string xprv_builtin = BIP32_deriveExtendedPrivateKey(seed_builtin); // Built-in BIP32 function (example, adapt to real one)
+    std::string xprv_custom = BIP32_deriveExtendedPrivateKey(seed_custom);   // Custom BIP32 function
+
+    // Extended public key
+    std::string xpub_builtin = BIP32_deriveExtendedPublicKey(seed_builtin); // Built-in BIP32 function (example)
+    std::string xpub_custom = BIP32_deriveExtendedPublicKey(seed_custom);   // Custom BIP32 function
+
+    // Extended account keys (both private and public)
+    std::string account_xprv_builtin = BIP32_deriveAccountPrivateKey(seed_builtin, 0);  // Example BIP32 function
+    std::string account_xprv_custom = BIP32_deriveAccountPrivateKey(seed_custom, 0);    // Custom implementation
+
+    std::string account_xpub_builtin = BIP32_deriveAccountPublicKey(seed_builtin, 0);   // Example BIP32 function
+    std::string account_xpub_custom = BIP32_deriveAccountPublicKey(seed_custom, 0);     // Custom implementation
+
+    // 5. Log the differences
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("mnemonic", mnemonic);
+
+    // Check seed difference
+    if (seed_matches) {
+        result.pushKV("seed_match", "success");
+    } else {
+        result.pushKV("seed_match", "failure");
+        result.pushKV("seed_builtin", VectorToHexStr(seed_builtin));
+        result.pushKV("seed_custom", VectorToHexStr(seed_custom));
+    }
+
+    // Compare extended private keys
+    if (xprv_builtin == xprv_custom) {
+        result.pushKV("xprv_match", "success");
+    } else {
+        result.pushKV("xprv_match", "failure");
+        result.pushKV("xprv_builtin", xprv_builtin);
+        result.pushKV("xprv_custom", xprv_custom);
+    }
+
+    // Compare extended public keys
+    if (xpub_builtin == xpub_custom) {
+        result.pushKV("xpub_match", "success");
+    } else {
+        result.pushKV("xpub_match", "failure");
+        result.pushKV("xpub_builtin", xpub_builtin);
+        result.pushKV("xpub_custom", xpub_custom);
+    }
+
+    // Compare account extended private keys
+    if (account_xprv_builtin == account_xprv_custom) {
+        result.pushKV("account_xprv_match", "success");
+    } else {
+        result.pushKV("account_xprv_match", "failure");
+        result.pushKV("account_xprv_builtin", account_xprv_builtin);
+        result.pushKV("account_xprv_custom", account_xprv_custom);
+    }
+
+    // Compare account extended public keys
+    if (account_xpub_builtin == account_xpub_custom) {
+        result.pushKV("account_xpub_match", "success");
+    } else {
+        result.pushKV("account_xpub_match", "failure");
+        result.pushKV("account_xpub_builtin", account_xpub_builtin);
+        result.pushKV("account_xpub_custom", account_xpub_custom);
+    }
+
+    return result;
+}
+
 // Test function for PBKDF2_HMAC_SHA512
 UniValue testpbkdf2(const JSONRPCRequest& request)
 {
@@ -5236,7 +5325,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "bip39generate",             &bip39GenerateMnemonic,   true,  {"number_of_words"} },
     { "wallet",             "getroi",                   &getroi,                   false, {} },
     { "wallet",             "testhmacsha512",           &testhmacsha512,           true,  {} },
-    { "wallet",             "testpbkdf2",               &testpbkdf2,              true,  {} },
+    { "wallet",             "testpbkdf2",               &testpbkdf2,               true,  {} },
+    { "wallet",             "test_bip39_bip32",         &test_bip39_bip32,         true,  {} },
     /** Sapling functions */ 
     { "hidden",             "getnewshieldaddress",           &getnewshieldaddress,            true,  {"label"} },
     { "hidden",             "listshieldaddresses",           &listshieldaddresses,            false, {"include_watchonly"} },

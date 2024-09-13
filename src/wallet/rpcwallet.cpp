@@ -75,11 +75,11 @@ bool EnsureWalletIsAvailable(CWallet* const pwallet, bool avoidException)
         "Wallet file not specified (must request wallet RPC through /wallet/<filename> uri-path).");
 }
 
-std::string CKeyToHex(const CKey& key) {
-    return HexStr(Span<const unsigned char>(key.begin(), key.size()));
+// Helper function for displaying hex-encoded strings
+std::string VectorToHexStr(const std::vector<unsigned char>& data) {
+    return HexStr(Span<const unsigned char>(data));
 }
 
-// Function to compare and log differences between the default and custom implementations
 // Derive extended private key from seed
 CKey DeriveExtendedPrivateKey(const std::vector<unsigned char>& seed) {
     CKey key;
@@ -90,6 +90,11 @@ CKey DeriveExtendedPrivateKey(const std::vector<unsigned char>& seed) {
 // Derive extended public key from private key
 CPubKey DeriveExtendedPublicKey(const CKey& privKey) {
     return privKey.GetPubKey();  // Derive public key from private key
+}
+
+// Function to convert a CKey (private key) to hex string
+std::string CKeyToHex(const CKey& key) {
+    return HexStr(Span<const unsigned char>(key.begin(), key.size()));
 }
 
 // Function to compare and log differences between the default and custom implementations
@@ -158,6 +163,69 @@ UniValue test_bip39_bip32(const JSONRPCRequest& request)
     }
 
     return result;
+}
+
+// PBKDF2 Test Function (example)
+UniValue testpbkdf2(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            "testpbkdf2\n"
+            "Tests PBKDF2-HMAC-SHA512 implementation and compares it with a known test vector.\n"
+        );
+
+    // Test parameters
+    std::string password = "password";
+    std::string salt = "salt";
+    int iterations = 1;
+    int dkLen = 20;  // Derived key length
+
+    // Expected derived key (test vector)
+    std::vector<unsigned char> expected_dk = {
+        0x0c, 0x60, 0xc8, 0x0f, 0x96, 0x1f, 0x0e, 0x71,
+        0xf3, 0xa9, 0xb5, 0x24, 0xaf, 0x60, 0x12, 0x06,
+        0x2f, 0xe0, 0x37, 0xa6
+    };
+
+    // Compute derived key using the built-in PBKDF2-HMAC-SHA512 function
+    std::vector<unsigned char> built_in_output(dkLen);
+    PBKDF2_HMAC_SHA512(password, salt, iterations, dkLen, built_in_output);
+
+    // Custom PBKDF2-HMAC-SHA512 implementation (as provided earlier)
+    std::vector<uint8_t> salt_bytes(salt.begin(), salt.end());
+    std::vector<unsigned char> custom_output = pbkdf2_hmac_sha512(password, salt_bytes, iterations, dkLen);
+
+    // Compare both results with the expected output
+    bool built_in_matches = (built_in_output == expected_dk);
+    bool custom_matches = (custom_output == expected_dk);
+
+    // Prepare the result object
+    UniValue resultObj(UniValue::VOBJ);
+
+    // Check the built-in implementation result
+    if (built_in_matches) {
+        resultObj.pushKV("built_in_status", "success");
+    } else {
+        resultObj.pushKV("built_in_status", "failure");
+        resultObj.pushKV("built_in_computed", VectorToHexStr(built_in_output));
+    }
+
+    // Check the custom implementation result
+    if (custom_matches) {
+        resultObj.pushKV("custom_status", "success");
+    } else {
+        resultObj.pushKV("custom_status", "failure");
+        resultObj.pushKV("custom_computed", VectorToHexStr(custom_output));
+    }
+
+    // Final status
+    if (built_in_matches && custom_matches) {
+        resultObj.pushKV("final_status", "success");
+    } else {
+        resultObj.pushKV("final_status", "failure");
+    }
+
+    return resultObj;
 }
 
 

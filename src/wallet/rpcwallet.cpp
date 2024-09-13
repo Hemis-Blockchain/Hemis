@@ -279,10 +279,9 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
     accountKey.Derive(accountKey, 119 | 0x80000000);  // Coin type: PIVX/Hemis (119)
     accountKey.Derive(accountKey, 0 | 0x80000000);    // Account 0
 
-    // Step 5: Convert the account private key to WIF for display (optional)
-    CKey accountPrivateKey = accountKey.key;
-    std::string accountPrivateWIF = KeyIO::EncodeSecret(accountPrivateKey);
-    LogPrintf("DEBUG: BIP44 account private key (WIF): %s\n", accountPrivateWIF.c_str());
+
+// Step 5: Encode the extended account private key
+std::string accountExtendedPrivateKey = KeyIO::EncodeExtKey(accountKey);
 
     // Step 6: Get the corresponding account public key
     CPubKey accountPubKey = accountPrivateKey.GetPubKey();
@@ -342,7 +341,7 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
     result.pushKV("mnemonic", mnemonic);
     result.pushKV("seed", HexStr(seed));
     result.pushKV("extended_master_private_key", KeyIO::EncodeExtKey(masterKey));
-    result.pushKV("account_private_key", accountPrivateWIF);
+    result.pushKV("account_extended_private_key", accountExtendedPrivateKey);
     result.pushKV("account_public_key", HexStr(accountPubKey));
     result.pushKV("new_seed", KeyIO::EncodeSecret(masterKey.key));
     result.pushKV("public_address", EncodeDestination(vchAddress));

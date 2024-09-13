@@ -280,12 +280,18 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
     accountKey.Derive(accountKey, 0 | 0x80000000);    // Account 0
 
 
-// Step 5: Encode the extended account private key
+// Step 5: Get the account private key from accountKey
+CKey accountPrivateKey = accountKey.key;
+
+// Encode the extended account private key
 std::string accountExtendedPrivateKey = KeyIO::EncodeExtKey(accountKey);
 
-    // Step 6: Get the corresponding account public key
-    CPubKey accountPubKey = accountPrivateKey.GetPubKey();
-    LogPrintf("DEBUG: BIP44 account public key (hex): %s\n", HexStr(accountPubKey).c_str());
+// Step 6: Get the corresponding account public key
+CPubKey accountPubKey = accountPrivateKey.GetPubKey();
+
+// Get the extended account public key
+CExtPubKey accountExtPubKey = accountKey.Neutered();
+std::string accountExtendedPublicKey = KeyIO::EncodeExtPubKey(accountExtPubKey);
 
     // Step 7: Set the new HD seed in the wallet
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
@@ -336,15 +342,17 @@ std::string accountExtendedPrivateKey = KeyIO::EncodeExtKey(accountKey);
         sspk_man->SetHDSeed(pubkey, true);
     }
 
-    // Step 12: Return debug information to the user
-    UniValue result(UniValue::VOBJ);
-    result.pushKV("mnemonic", mnemonic);
-    result.pushKV("seed", HexStr(seed));
-    result.pushKV("extended_master_private_key", KeyIO::EncodeExtKey(masterKey));
-    result.pushKV("account_extended_private_key", accountExtendedPrivateKey);
-    result.pushKV("account_public_key", HexStr(accountPubKey));
-    result.pushKV("new_seed", KeyIO::EncodeSecret(masterKey.key));
-    result.pushKV("public_address", EncodeDestination(vchAddress));
+
+// Step 12: Return debug information to the user
+UniValue result(UniValue::VOBJ);
+result.pushKV("mnemonic", mnemonic);
+result.pushKV("seed", HexStr(seed));
+result.pushKV("extended_master_private_key", KeyIO::EncodeExtKey(masterKey));
+result.pushKV("account_extended_private_key", accountExtendedPrivateKey);
+result.pushKV("account_extended_public_key", accountExtendedPublicKey);
+result.pushKV("account_public_key", HexStr(accountPubKey));
+result.pushKV("new_seed", KeyIO::EncodeSecret(masterKey.key));
+result.pushKV("public_address", EncodeDestination(vchAddress));
 
     return result;
 }

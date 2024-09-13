@@ -93,12 +93,6 @@ CPubKey DeriveExtendedPublicKey(const CKey& privKey) {
 }
 
 // Function to compare and log differences between the default and custom implementations
-// Function to convert a CKey (private key) to hex string
-std::string CKeyToHex(const CKey& key) {
-    return HexStr(key.begin(), key.end());
-}
-
-// Function to compare and log differences between the default and custom implementations
 UniValue test_bip39_bip32(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)

@@ -290,7 +290,7 @@ std::string accountExtendedPrivateKey = KeyIO::EncodeExtKey(accountKey);
 CPubKey accountPubKey = accountPrivateKey.GetPubKey();
 
 // Get the extended account public key
-CExtPubKey accountExtPubKey = accountKey.Neutered();
+CExtPubKey accountExtPubKey = accountKey.Neuter();
 std::string accountExtendedPublicKey = KeyIO::EncodeExtPubKey(accountExtPubKey);
 
     // Step 7: Set the new HD seed in the wallet

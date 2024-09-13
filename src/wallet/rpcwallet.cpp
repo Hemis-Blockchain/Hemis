@@ -245,6 +245,8 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
             "{\n"
             "  \"extended_master_private_key\": \"...\", (string) The BIP32 extended master private key\n"
             "  \"extended_master_public_key\": \"...\", (string) The BIP32 extended master public key\n"
+            "  \"account_private_key\": \"...\", (string) The BIP44 account-level private key\n"
+            "  \"account_public_key\": \"...\", (string) The BIP44 account-level public key\n"
             "  \"new_seed\": \"...\", (string) The new HD seed set in the wallet\n"
             "}\n"
             "\nExamples:\n"
@@ -270,16 +272,23 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
     LogPrintf("DEBUG: Converting seed to BIP32 extended master private key...\n");
     CExtKey masterKey;
     masterKey.SetSeed(seed.data(), seed.size());
-    
-    // Step 4: Obtain the BIP32 extended private and public keys using KeyIO
-    std::string extPrivKey = KeyIO::EncodeExtKey(masterKey);   // Use KeyIO::EncodeExtKey to get the Base58-encoded private key
-    CExtPubKey masterPubKey = masterKey.Neuter();              // Neuter() to get the corresponding public key
-    std::string extPubKey = KeyIO::EncodeExtPubKey(masterPubKey); // Use KeyIO::EncodeExtPubKey to get the Base58-encoded public key
 
-    LogPrintf("DEBUG: BIP32 extended master private key: %s\n", extPrivKey.c_str());
-    LogPrintf("DEBUG: BIP32 extended master public key: %s\n", extPubKey.c_str());
+    // Step 4: Derive the account private key (BIP44: m/44'/119'/0'/0)
+    CExtKey accountKey = masterKey;
+    accountKey.Derive(accountKey, 44 | 0x80000000);   // Purpose: BIP44
+    accountKey.Derive(accountKey, 119 | 0x80000000);  // Coin type: PIVX/Hemis (119)
+    accountKey.Derive(accountKey, 0 | 0x80000000);    // Account 0
 
-    // Step 5: Set the new HD seed in the wallet
+    // Step 5: Convert the account private key to WIF for display (optional)
+    CKey accountPrivateKey = accountKey.key;
+    std::string accountPrivateWIF = KeyIO::EncodeSecret(accountPrivateKey);
+    LogPrintf("DEBUG: BIP44 account private key (WIF): %s\n", accountPrivateWIF.c_str());
+
+    // Step 6: Get the corresponding account public key
+    CPubKey accountPubKey = accountPrivateKey.GetPubKey();
+    LogPrintf("DEBUG: BIP44 account public key (hex): %s\n", HexStr(accountPubKey).c_str());
+
+    // Step 7: Set the new HD seed in the wallet
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Cannot access wallet");
@@ -291,7 +300,7 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
     // Mark wallet as dirty
     pwallet->MarkDirty();
 
-    // Step 6: Get the corresponding public key and add to address book
+    // Step 8: Add the master key to the wallet
     CPubKey pubkey = masterKey.key.GetPubKey();
     assert(masterKey.key.VerifyPubKey(pubkey));
     CKeyID vchAddress = pubkey.GetID();
@@ -299,7 +308,7 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
     LogPrintf("DEBUG: Derived public key (hex): %s\n", HexStr(pubkey).c_str());
     LogPrintf("DEBUG: Derived public key address: %s\n", EncodeDestination(vchAddress).c_str());
 
-    // Add public key to the wallet's address book
+    // Step 9: Add the public key to the address book
     pwallet->SetAddressBook(vchAddress, "HD Seed", AddressBook::AddressBookPurpose::RECEIVE);
 
     if (!pwallet->HaveKey(vchAddress)) {
@@ -311,7 +320,7 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
         }
     }
 
-    // Step 7: Set the HD Seed and regenerate the keypool manually
+    // Step 10: Set the HD Seed and regenerate the keypool manually
     LogPrintf("DEBUG: Setting HD seed and regenerating keypool...\n");
     ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan();
     spk_man->SetHDSeed(pubkey, true);
@@ -320,7 +329,7 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
     spk_man->NewKeyPool();  // Same as in the sethdseed command
     LogPrintf("DEBUG: Keypool regenerated successfully\n");
 
-    // Step 8: Update Sapling chain if necessary
+    // Step 11: Update Sapling chain if necessary
     SaplingScriptPubKeyMan* sspk_man = pwallet->CanSupportFeature(FEATURE_SAPLING) ?
                                        pwallet->GetSaplingScriptPubKeyMan() : nullptr;
     if (sspk_man) {
@@ -328,12 +337,14 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
         sspk_man->SetHDSeed(pubkey, true);
     }
 
-    // Step 9: Return debug information to the user
+    // Step 12: Return debug information to the user
     UniValue result(UniValue::VOBJ);
     result.pushKV("mnemonic", mnemonic);
     result.pushKV("seed", HexStr(seed));
-    result.pushKV("extended_master_private_key", extPrivKey);
-    result.pushKV("extended_master_public_key", extPubKey);
+    result.pushKV("extended_master_private_key", masterKey.ToString());
+    result.pushKV("account_private_key", accountPrivateWIF);
+    result.pushKV("account_public_key", HexStr(accountPubKey));
+    result.pushKV("new_seed", KeyIO::EncodeSecret(masterKey.key));
     result.pushKV("public_address", EncodeDestination(vchAddress));
 
     return result;

@@ -75,8 +75,8 @@ bool EnsureWalletIsAvailable(CWallet* const pwallet, bool avoidException)
         "Wallet file not specified (must request wallet RPC through /wallet/<filename> uri-path).");
 }
 
-std::string VectorToHexStr(const std::vector<unsigned char>& data) {
-    return HexStr(Span<const unsigned char>(data));
+std::string CKeyToHex(const CKey& key) {
+    return HexStr(Span<const unsigned char>(key.begin(), key.size()));
 }
 
 // Function to compare and log differences between the default and custom implementations

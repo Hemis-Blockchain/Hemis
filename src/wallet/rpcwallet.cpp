@@ -98,8 +98,8 @@ UniValue testhmacsha512(const JSONRPCRequest& request)
     unsigned char result[CHMAC_SHA512::OUTPUT_SIZE];
     CHMAC_SHA512((const unsigned char*)password.data(), password.size()).Write((const unsigned char*)text.data(), text.size()).Finalize(result);
 
-    // Convert the result to a hex string
-    std::string computed_hash = HexStr(result, result + CHMAC_SHA512::OUTPUT_SIZE);
+    // Convert the result to a hex string using Span
+    std::string computed_hash = HexStr(Span<const unsigned char>(result, CHMAC_SHA512::OUTPUT_SIZE));
 
     // Compare the computed hash with the expected hash
     if (computed_hash == expected_hash) {

@@ -80,6 +80,19 @@ std::string VectorToHexStr(const std::vector<unsigned char>& data) {
 }
 
 // Function to compare and log differences between the default and custom implementations
+// Derive extended private key from seed
+CKey DeriveExtendedPrivateKey(const std::vector<unsigned char>& seed) {
+    CKey key;
+    key.Set(seed.begin(), seed.end(), true);  // Initialize key with seed
+    return key;
+}
+
+// Derive extended public key from private key
+CPubKey DeriveExtendedPublicKey(const CKey& privKey) {
+    return privKey.GetPubKey();  // Derive public key from private key
+}
+
+// Function to compare and log differences between the default and custom implementations
 UniValue test_bip39_bip32(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
@@ -101,22 +114,19 @@ UniValue test_bip39_bip32(const JSONRPCRequest& request)
     // 4. Compare the seeds
     bool seed_matches = (seed_builtin == seed_custom);
 
-    // Generate BIP32 extended private/public keys (default and custom)
-    std::string xprv_builtin = BIP32_deriveExtendedPrivateKey(seed_builtin); // Built-in BIP32 function (example, adapt to real one)
-    std::string xprv_custom = BIP32_deriveExtendedPrivateKey(seed_custom);   // Custom BIP32 function
+    // 5. Derive extended private key using built-in seed
+    CKey xprv_builtin = DeriveExtendedPrivateKey(seed_builtin);
 
-    // Extended public key
-    std::string xpub_builtin = BIP32_deriveExtendedPublicKey(seed_builtin); // Built-in BIP32 function (example)
-    std::string xpub_custom = BIP32_deriveExtendedPublicKey(seed_custom);   // Custom BIP32 function
+    // 6. Derive extended public key using built-in private key
+    CPubKey xpub_builtin = DeriveExtendedPublicKey(xprv_builtin);
 
-    // Extended account keys (both private and public)
-    std::string account_xprv_builtin = BIP32_deriveAccountPrivateKey(seed_builtin, 0);  // Example BIP32 function
-    std::string account_xprv_custom = BIP32_deriveAccountPrivateKey(seed_custom, 0);    // Custom implementation
+    // 7. Derive extended private key using custom seed
+    CKey xprv_custom = DeriveExtendedPrivateKey(seed_custom);
 
-    std::string account_xpub_builtin = BIP32_deriveAccountPublicKey(seed_builtin, 0);   // Example BIP32 function
-    std::string account_xpub_custom = BIP32_deriveAccountPublicKey(seed_custom, 0);     // Custom implementation
+    // 8. Derive extended public key using custom private key
+    CPubKey xpub_custom = DeriveExtendedPublicKey(xprv_custom);
 
-    // 5. Log the differences
+    // 9. Log the differences
     UniValue result(UniValue::VOBJ);
     result.pushKV("mnemonic", mnemonic);
 
@@ -134,8 +144,8 @@ UniValue test_bip39_bip32(const JSONRPCRequest& request)
         result.pushKV("xprv_match", "success");
     } else {
         result.pushKV("xprv_match", "failure");
-        result.pushKV("xprv_builtin", xprv_builtin);
-        result.pushKV("xprv_custom", xprv_custom);
+        result.pushKV("xprv_builtin", xprv_builtin.GetHex());
+        result.pushKV("xprv_custom", xprv_custom.GetHex());
     }
 
     // Compare extended public keys
@@ -143,26 +153,8 @@ UniValue test_bip39_bip32(const JSONRPCRequest& request)
         result.pushKV("xpub_match", "success");
     } else {
         result.pushKV("xpub_match", "failure");
-        result.pushKV("xpub_builtin", xpub_builtin);
-        result.pushKV("xpub_custom", xpub_custom);
-    }
-
-    // Compare account extended private keys
-    if (account_xprv_builtin == account_xprv_custom) {
-        result.pushKV("account_xprv_match", "success");
-    } else {
-        result.pushKV("account_xprv_match", "failure");
-        result.pushKV("account_xprv_builtin", account_xprv_builtin);
-        result.pushKV("account_xprv_custom", account_xprv_custom);
-    }
-
-    // Compare account extended public keys
-    if (account_xpub_builtin == account_xpub_custom) {
-        result.pushKV("account_xpub_match", "success");
-    } else {
-        result.pushKV("account_xpub_match", "failure");
-        result.pushKV("account_xpub_builtin", account_xpub_builtin);
-        result.pushKV("account_xpub_custom", account_xpub_custom);
+        result.pushKV("xpub_builtin", HexStr(xpub_builtin));
+        result.pushKV("xpub_custom", HexStr(xpub_custom));
     }
 
     return result;

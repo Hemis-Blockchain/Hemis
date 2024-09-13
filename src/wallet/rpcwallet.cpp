@@ -75,9 +75,8 @@ bool EnsureWalletIsAvailable(CWallet* const pwallet, bool avoidException)
         "Wallet file not specified (must request wallet RPC through /wallet/<filename> uri-path).");
 }
 
-// Function to convert a vector to a hex string
 std::string VectorToHexStr(const std::vector<unsigned char>& data) {
-    return HexStr(data.begin(), data.end());
+    return HexStr(Span<const unsigned char>(data));
 }
 
 // Test function for PBKDF2_HMAC_SHA512
@@ -5237,7 +5236,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "bip39generate",             &bip39GenerateMnemonic,   true,  {"number_of_words"} },
     { "wallet",             "getroi",                   &getroi,                   false, {} },
     { "wallet",             "testhmacsha512",           &testhmacsha512,           true,  {} },
-    { "wallet",             "testpbkdf2",               &testpbkdf22,              true,  {} },
+    { "wallet",             "testpbkdf2",               &testpbkdf2,              true,  {} },
     /** Sapling functions */ 
     { "hidden",             "getnewshieldaddress",           &getnewshieldaddress,            true,  {"label"} },
     { "hidden",             "listshieldaddresses",           &listshieldaddresses,            false, {"include_watchonly"} },

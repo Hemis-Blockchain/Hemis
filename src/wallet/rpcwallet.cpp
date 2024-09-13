@@ -341,7 +341,7 @@ UniValue bip39ToBip32(const JSONRPCRequest& request)
     UniValue result(UniValue::VOBJ);
     result.pushKV("mnemonic", mnemonic);
     result.pushKV("seed", HexStr(seed));
-    result.pushKV("extended_master_private_key", masterKey.ToString());
+    result.pushKV("extended_master_private_key", KeyIO::EncodeExtKey(masterKey));
     result.pushKV("account_private_key", accountPrivateWIF);
     result.pushKV("account_public_key", HexStr(accountPubKey));
     result.pushKV("new_seed", KeyIO::EncodeSecret(masterKey.key));

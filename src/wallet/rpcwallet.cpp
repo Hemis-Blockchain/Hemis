@@ -75,6 +75,44 @@ bool EnsureWalletIsAvailable(CWallet* const pwallet, bool avoidException)
         "Wallet file not specified (must request wallet RPC through /wallet/<filename> uri-path).");
 }
 
+UniValue testhmacsha512(const JSONRPCRequest& request)
+{
+    // Ensure the function can be called without any parameters for internal testing
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            "testhmacsha512\n"
+            "Tests the built-in HMAC_SHA512 implementation with a fixed password and text.\n"
+            "\nResult:\n"
+            "Returns 'success' if the test hash matches the expected value.\n"
+            "Otherwise, returns 'failure' with the computed hash.\n"
+        );
+
+    // Test password and text
+    std::string password = "1234567890";
+    std::string text = "we are testing the build in HMAC_SHA512";
+
+    // Expected result
+    std::string expected_hash = "da8a26fb85f792e75e7b8c035039076b7f14ffe5b8cb643486ea35933af2b2c2094a8f6f43da9a6756a3601ac3128a22c9e8ae97625613697cc8d6d45bb85214";
+
+    // Compute HMAC_SHA512
+    unsigned char result[CHMAC_SHA512::OUTPUT_SIZE];
+    CHMAC_SHA512((const unsigned char*)password.data(), password.size()).Write((const unsigned char*)text.data(), text.size()).Finalize(result);
+
+    // Convert the result to a hex string
+    std::string computed_hash = HexStr(result, result + CHMAC_SHA512::OUTPUT_SIZE);
+
+    // Compare the computed hash with the expected hash
+    if (computed_hash == expected_hash) {
+        return UniValue("success");
+    } else {
+        UniValue resultObj(UniValue::VOBJ);
+        resultObj.pushKV("status", "failure");
+        resultObj.pushKV("computed_hash", computed_hash);
+        return resultObj;
+    }
+}
+
+
 // checkbip39seed "mnemonic" ( "passphrase" )
 UniValue checkbip39seed(const JSONRPCRequest& request)
 {
@@ -5126,6 +5164,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "bip39tobip32",             &bip39ToBip32,             true,  {"mnemonic", "passphrase", "import"} },
     { "wallet",             "bip39generate",             &bip39GenerateMnemonic,   true,  {"number_of_words"} },
     { "wallet",             "getroi",                   &getroi,                   false, {} },
+    { "wallet",             "testhmacsha512",           &testhmacsha512,           true,  {} },
 
     /** Sapling functions */
     { "hidden",             "getnewshieldaddress",           &getnewshieldaddress,            true,  {"label"} },

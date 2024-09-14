@@ -75,6 +75,12 @@ bool EnsureWalletIsAvailable(CWallet* const pwallet, bool avoidException)
         "Wallet file not specified (must request wallet RPC through /wallet/<filename> uri-path).");
 }
 
+
+// Function to convert a CKey (private key) to hex string
+std::string CKeyToHex(const CKey& key) {
+    return HexStr(Span<const unsigned char>(key.begin(), key.size()));
+}
+
 // Helper function for displaying hex-encoded strings
 std::string VectorToHexStr(const std::vector<unsigned char>& data) {
     return HexStr(Span<const unsigned char>(data));
@@ -84,17 +90,19 @@ std::string VectorToHexStr(const std::vector<unsigned char>& data) {
 CKey DeriveExtendedPrivateKey(const std::vector<unsigned char>& seed) {
     CKey key;
     key.Set(seed.begin(), seed.end(), true);  // Initialize key with seed
+    if (!key.IsValid()) {
+        throw std::runtime_error("Error: Invalid private key");
+    }
     return key;
 }
 
 // Derive extended public key from private key
 CPubKey DeriveExtendedPublicKey(const CKey& privKey) {
-    return privKey.GetPubKey();  // Derive public key from private key
-}
-
-// Function to convert a CKey (private key) to hex string
-std::string CKeyToHex(const CKey& key) {
-    return HexStr(Span<const unsigned char>(key.begin(), key.size()));
+    CPubKey pubKey = privKey.GetPubKey();  // Derive public key from private key
+    if (!pubKey.IsFullyValid()) {
+        throw std::runtime_error("Error: Invalid public key");
+    }
+    return pubKey;
 }
 
 // Function to compare and log differences between the default and custom implementations
@@ -113,8 +121,18 @@ UniValue test_bip39_bip32(const JSONRPCRequest& request)
     // 2. Compute seed using the built-in implementation
     std::vector<unsigned char> seed_builtin = mnemonicToSeed(mnemonic, passphrase);
 
+    // Ensure the seed size is valid (64 bytes for BIP32)
+    if (seed_builtin.size() < 64) {
+        throw std::runtime_error("Error: Built-in seed size is too small");
+    }
+
     // 3. Compute seed using the custom implementation
     std::vector<uint8_t> seed_custom = pbkdf2_hmac_sha512(mnemonic, std::vector<uint8_t>(passphrase.begin(), passphrase.end()), 2048, 64);
+
+    // Ensure the custom seed size is valid
+    if (seed_custom.size() < 64) {
+        throw std::runtime_error("Error: Custom seed size is too small");
+    }
 
     // 4. Compare the seeds
     bool seed_matches = (seed_builtin == seed_custom);

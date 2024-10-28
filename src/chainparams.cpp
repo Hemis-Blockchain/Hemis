@@ -436,7 +436,7 @@ public:
         consensus.powLimit   = uint256S("0x000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimitV1 = uint256S("0x000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimitV2 = uint256S("0x0000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nBudgetCycleBlocks = 43200;       // approx. 1 every 30 days
+        consensus.nBudgetCycleBlocks = 144;       // approx. 10 cycles per day
         consensus.nBudgetFeeConfirmations = 6;      // Number of confirmations for the finalization fee
         consensus.nCoinbaseMaturity = 100;
         consensus.nFutureTimeDriftPoW = 7200;
@@ -444,7 +444,7 @@ public:
         consensus.nMaxMoneyOut = 30000000 * COIN;
         consensus.nGMCollateralAmt = 1000 * COIN;
         consensus.nGMBlockReward = 0.775 * COIN;
-        consensus.nNewGMBlockReward = 2.9424999945 * COIN;
+        consensus.nNewGMBlockReward = 2.67499999 * COIN;
         consensus.nGMCollateralMinConf = 15;
         consensus.nProposalEstablishmentTime = 60 * 60 * 24;    // must be at least a day old to make it into a budget
         consensus.nStakeMinAge = 60 * 60;

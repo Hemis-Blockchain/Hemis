@@ -808,8 +808,7 @@ CAmount CBudgetManager::GetTotalBudget(int nHeight)
 {
     // 100% of block reward after V5.5 upgrade
     CAmount nSubsidy = GetBlockValue(nHeight);
-    nSubsidy /= 2.5;
-    nSubsidy *= 3;
+    nSubsidy /= 2;
 
     // multiplied by the number of blocks in a cycle (144 on testnet, 30*1440 on mainnet)
     return nSubsidy * Params().GetConsensus().nBudgetCycleBlocks;

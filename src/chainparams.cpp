@@ -446,7 +446,7 @@ public:
         consensus.nGMBlockReward = 0.775 * COIN;
         consensus.nNewGMBlockReward = 2.67499999 * COIN;
         consensus.nGMCollateralMinConf = 15;
-        consensus.nProposalEstablishmentTime = 60 * 60 * 24;    // must be at least a day old to make it into a budget
+        consensus.nProposalEstablishmentTime = 60 * 5;    // must be at least a day old to make it into a budget
         consensus.nStakeMinAge = 60 * 60;
         consensus.nStakeMinDepth = 300;
         consensus.nTargetTimespan = 20 * 60;

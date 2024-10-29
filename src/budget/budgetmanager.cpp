@@ -806,9 +806,9 @@ std::string CBudgetManager::GetRequiredPaymentsString(int nBlockHeight)
 
 CAmount CBudgetManager::GetTotalBudget(int nHeight)
 {
-    // 100% of block reward after V5.5 upgrade
+    // 10% of block reward
     CAmount nSubsidy = GetBlockValue(nHeight);
-    nSubsidy /= 2;
+    nSubsidy *= 0.10;
 
     // multiplied by the number of blocks in a cycle (144 on testnet, 30*1440 on mainnet)
     return nSubsidy * Params().GetConsensus().nBudgetCycleBlocks;

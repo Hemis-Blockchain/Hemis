@@ -808,7 +808,8 @@ CAmount CBudgetManager::GetTotalBudget(int nHeight)
 {
     // 10% of block reward
     CAmount nSubsidy = GetBlockValue(nHeight);
-    nSubsidy *= 0.10;
+    nSubsidy /= 100;
+    nSubsidy *= 3;
 
     // multiplied by the number of blocks in a cycle (144 on testnet, 30*1440 on mainnet)
     return nSubsidy * Params().GetConsensus().nBudgetCycleBlocks;

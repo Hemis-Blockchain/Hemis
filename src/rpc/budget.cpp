@@ -543,7 +543,7 @@ UniValue gmfinalbudgetsuggest(const JSONRPCRequest& request)
                 "\nTry to submit a budget finalization\n"
                 "returns the budget hash if it was broadcasted sucessfully");
 
-    if (!Params().IsTestNetwork()) {
+    if (!Params().IsTestnet()) {
         throw JSONRPCError(RPC_MISC_ERROR, "command available only for RegTest network");
     }
 
@@ -579,7 +579,7 @@ UniValue createrawgmfinalbudget(const JSONRPCRequest& request)
                 "}\n"
                 ); // future: add examples.
 
-    if (!Params().IsTestNetwork()) {
+    if (!Params().IsTestnet()) {
         throw JSONRPCError(RPC_MISC_ERROR, "command available only for RegTest network");
     }
 

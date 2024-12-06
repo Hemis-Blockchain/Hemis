@@ -4822,7 +4822,6 @@ static const CRPCCommand commands[] =
     { "wallet",             "bip38encrypt",             &bip38encrypt,             true,  {"address","passphrase"} },
     { "wallet",             "bip38decrypt",             &bip38decrypt,             true,  {"encrypted_key","passphrase"} },
     { "wallet",             "getroi",                   &getroi,                   false, {} },
-    { "wallet",             "reloadgamemasterconfig",   &reloadgamemasterconfig,   true, {} },
 
     /** Sapling functions */
     { "hidden",             "getnewshieldaddress",           &getnewshieldaddress,            true,  {"label"} },

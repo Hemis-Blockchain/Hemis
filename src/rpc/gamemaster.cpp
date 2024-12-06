@@ -1189,6 +1189,7 @@ static const CRPCCommand commands[] =
     { "gamemaster",         "gamemastercurrent",         &gamemastercurrent,         true,  {} },
     { "gamemaster",         "relaygamemasterbroadcast",  &relaygamemasterbroadcast,  true,  {"hexstring"} },
     { "gamemaster",         "startgamemaster",           &startgamemaster,           true,  {"set","lock_wallet","alias","reload_conf"} },
+    { "gamemaster",         "reloadgamemasterconfig",           &reloadgamemasterconfig,  true,  {} },
 
     /** Not shown in help */
     { "hidden",             "getcachedblockhashes",      &getcachedblockhashes,      true,  {} },

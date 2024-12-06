@@ -543,78 +543,104 @@ UniValue startgamemaster(const JSONRPCRequest& request)
     }
     throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid set name %s.", strCommand));
 }
+#include <rpc/server.h>
+#include <wallet/wallet.h>
+#include <wallet/rpcwallet.h>
+#include <univalue.h>
+#include <validation.h>
+#include <util/system.h>
+#include <util/translation.h>
+#include <key_io.h>
 
-UniValue reloadgamemasterconfig (const JSONRPCRequest& request)
+static UniValue reloadgamemasterconfig(const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() != 0))
+    if (request.fHelp || request.params.size() != 0) {
         throw std::runtime_error(
-            "reloadgamemasterconfig\n"
-            "\nHot-reloads the gamemasters.conf file, adding and/or removing gamemasters from the wallet at runtime.\n"
+            RPCHelpMan{
+                "reloadgamemasterconfig",
+                "\nHot-reloads the gamemasters.conf file, updating the gamemaster entries in the wallet.\n",
+                {},
+                RPCResult{
+                    "{\n"
+                    "  \"success\": true|false, (boolean) Success status.\n"
+                    "  \"message\": \"xxx\"   (string) Result message.\n"
+                    "}\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("reloadgamemasterconfig", "") +
+                    HelpExampleRpc("reloadgamemasterconfig", "")
+                }
+            }.ToString()
+        );
+    }
 
-            "\nResult:\n"
-            "{\n"
-            "  \"success\": true|false, (boolean) Success status.\n"
-            "  \"message\": \"xxx\"   (string) result message.\n"
-            "}\n"
+    UniValue result(UniValue::VOBJ);
 
-            "\nExamples:\n" +
-            HelpExampleCli("reloadgamemasterconfig", "") + HelpExampleRpc("reloadgamemasterconfig", ""));
+    // Wallet context
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) {
+        throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Wallet not found");
+    }
 
-    UniValue retObj(UniValue::VOBJ);
+    LOCK(pwallet->cs_wallet);
 
-    // Remember the previous GM count (for comparison)
-    auto gmconflock = GetBoolArg("-gmconflock", DEFAULT_MNCONFLOCK);
+    bool gmconflock = gArgs.GetBoolArg("-gmconflock", DEFAULT_GMCONFLOCK);
+
+    // Remember previous GM count for comparison
     auto& entries = gamemasterConfig.getEntries();
     int prevCount = entries.size();
 
-    // Creates a set with the outputs to unlock at the end of the method, and
-    // Save the old entries to restore them in case of an error on the file
+    // Track outpoints to unlock and backup current entries
     std::set<COutPoint> outpointsToUnlock;
-    std::vector<CGamemasterConfig::CGamemasterEntry> oldEntries;
-    for (auto gme : entries) {
-        if (gmconflock) {
-            uint256 gmTxHash;
-            gmTxHash.SetHex(gme.getTxHash());
-            COutPoint outpoint = COutPoint(gmTxHash, (unsigned int)std::stoul(gme.getOutputIndex().c_str()));
+    std::vector<CGamemasterConfig::CGamemasterEntry> oldEntries(entries);
+
+    if (gmconflock) {
+        for (const auto& gme : entries) {
+            uint256 gmTxHash = uint256S(gme.getTxHash());
+            COutPoint outpoint(gmTxHash, static_cast<uint32_t>(std::stoul(gme.getOutputIndex())));
             outpointsToUnlock.insert(outpoint);
         }
-        oldEntries.push_back(gme);
     }
-    // Clear the loaded config
+
+    // Clear current configuration and reload from disk
     gamemasterConfig.clear();
-    // Load from disk
     std::string error;
     if (!gamemasterConfig.read(error)) {
-        // Failed
-        retObj.push_back(Pair("success", false));
-        retObj.push_back(Pair("message", "Error reloading gamemaster.conf, please fix it, " + error));
+        result.pushKV("success", false);
+        result.pushKV("message", "Error reloading gamemaster.conf: " + error);
 
-        outpointsToUnlock.clear();
+        // Restore old configuration
+        gamemasterConfig.setEntries(std::move(oldEntries));
     } else {
-        // Success
-        int newCount = gamemasterConfig.getCount() + 1; // legacy preservation without showing a strange counting
-        retObj.push_back(Pair("success", true));
-        retObj.push_back(Pair("message", "Successfully reloaded from the gamemaster.conf file (Prev nodes: " + std::to_string(prevCount) + ", New nodes: " + std::to_string(newCount) + ")"));
+        // Success: Count new entries
+        int newCount = gamemasterConfig.getCount();
+
+        result.pushKV("success", true);
+        result.pushKV("message", strprintf(
+            "Successfully reloaded gamemaster.conf (Previous nodes: %d, New nodes: %d)",
+            prevCount, newCount
+        ));
 
         if (gmconflock) {
-            for (auto& gme : entries) {
-                uint256 gmTxHash;
-                gmTxHash.SetHex(gme.getTxHash());
-                COutPoint outpoint = COutPoint(mnTxHash, (unsigned int)std::stoul(gme.getOutputIndex().c_str()));
-                pwalletMain->LockCoin(outpoint);
+            for (const auto& gme : gamemasterConfig.getEntries()) {
+                uint256 gmTxHash = uint256S(gme.getTxHash());
+                COutPoint outpoint(gmTxHash, static_cast<uint32_t>(std::stoul(gme.getOutputIndex())));
+                pwallet->LockCoin(outpoint);
                 outpointsToUnlock.erase(outpoint);
             }
         }
     }
 
+    // Unlock any remaining outpoints from the previous configuration
     if (gmconflock) {
-        for (auto outpoint : outpointsToUnlock) {
-            pwalletMain->UnlockCoin(outpoint);
+        for (const auto& outpoint : outpointsToUnlock) {
+            pwallet->UnlockCoin(outpoint);
         }
     }
 
-    return retObj;
+    return result;
 }
+
 
 
 UniValue creategamemasterkey(const JSONRPCRequest& request)

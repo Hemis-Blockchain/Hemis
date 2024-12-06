@@ -544,6 +544,79 @@ UniValue startgamemaster(const JSONRPCRequest& request)
     throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid set name %s.", strCommand));
 }
 
+UniValue reloadgamemasterconfig (const JSONRPCRequest& request)
+{
+    if (request.fHelp || (request.params.size() != 0))
+        throw std::runtime_error(
+            "reloadgamemasterconfig\n"
+            "\nHot-reloads the gamemasters.conf file, adding and/or removing gamemasters from the wallet at runtime.\n"
+
+            "\nResult:\n"
+            "{\n"
+            "  \"success\": true|false, (boolean) Success status.\n"
+            "  \"message\": \"xxx\"   (string) result message.\n"
+            "}\n"
+
+            "\nExamples:\n" +
+            HelpExampleCli("reloadgamemasterconfig", "") + HelpExampleRpc("reloadgamemasterconfig", ""));
+
+    UniValue retObj(UniValue::VOBJ);
+
+    // Remember the previous GM count (for comparison)
+    auto gmconflock = GetBoolArg("-gmconflock", DEFAULT_MNCONFLOCK);
+    auto& entries = gamemasterConfig.getEntries();
+    int prevCount = entries.size();
+
+    // Creates a set with the outputs to unlock at the end of the method, and
+    // Save the old entries to restore them in case of an error on the file
+    std::set<COutPoint> outpointsToUnlock;
+    std::vector<CGamemasterConfig::CGamemasterEntry> oldEntries;
+    for (auto gme : entries) {
+        if (gmconflock) {
+            uint256 gmTxHash;
+            gmTxHash.SetHex(gme.getTxHash());
+            COutPoint outpoint = COutPoint(gmTxHash, (unsigned int)std::stoul(gme.getOutputIndex().c_str()));
+            outpointsToUnlock.insert(outpoint);
+        }
+        oldEntries.push_back(gme);
+    }
+    // Clear the loaded config
+    gamemasterConfig.clear();
+    // Load from disk
+    std::string error;
+    if (!gamemasterConfig.read(error)) {
+        // Failed
+        retObj.push_back(Pair("success", false));
+        retObj.push_back(Pair("message", "Error reloading gamemaster.conf, please fix it, " + error));
+
+        outpointsToUnlock.clear();
+    } else {
+        // Success
+        int newCount = gamemasterConfig.getCount() + 1; // legacy preservation without showing a strange counting
+        retObj.push_back(Pair("success", true));
+        retObj.push_back(Pair("message", "Successfully reloaded from the gamemaster.conf file (Prev nodes: " + std::to_string(prevCount) + ", New nodes: " + std::to_string(newCount) + ")"));
+
+        if (gmconflock) {
+            for (auto& gme : entries) {
+                uint256 gmTxHash;
+                gmTxHash.SetHex(gme.getTxHash());
+                COutPoint outpoint = COutPoint(mnTxHash, (unsigned int)std::stoul(gme.getOutputIndex().c_str()));
+                pwalletMain->LockCoin(outpoint);
+                outpointsToUnlock.erase(outpoint);
+            }
+        }
+    }
+
+    if (gmconflock) {
+        for (auto outpoint : outpointsToUnlock) {
+            pwalletMain->UnlockCoin(outpoint);
+        }
+    }
+
+    return retObj;
+}
+
+
 UniValue creategamemasterkey(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() != 0))

@@ -543,14 +543,6 @@ UniValue startgamemaster(const JSONRPCRequest& request)
     }
     throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid set name %s.", strCommand));
 }
-#include <rpc/server.h>
-#include <wallet/wallet.h>
-#include <wallet/rpcwallet.h>
-#include <univalue.h>
-#include <validation.h>
-#include <util/system.h>
-#include <util/translation.h>
-#include <key_io.h>
 
 static UniValue reloadgamemasterconfig(const JSONRPCRequest& request)
 {

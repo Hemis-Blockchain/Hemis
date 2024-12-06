@@ -598,7 +598,7 @@ static UniValue reloadgamemasterconfig(const JSONRPCRequest& request)
 
         // Restore old configuration manually
         for (const auto& oldEntry : oldEntries) {
-            gamemasterConfig.addEntry(oldEntry);
+            gamemasterConfig.getEntries().push_back(oldEntry);
         }
     } else {
         // Success: Count new entries

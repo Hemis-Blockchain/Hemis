@@ -548,38 +548,33 @@ static UniValue reloadgamemasterconfig(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0) {
         throw std::runtime_error(
-            RPCHelpMan{
-                "reloadgamemasterconfig",
-                "\nHot-reloads the gamemasters.conf file, updating the gamemaster entries in the wallet.\n",
-                {},
-                RPCResult{
-                    "{\n"
-                    "  \"success\": true|false, (boolean) Success status.\n"
-                    "  \"message\": \"xxx\"   (string) Result message.\n"
-                    "}\n"
-                },
-                RPCExamples{
-                    HelpExampleCli("reloadgamemasterconfig", "") +
-                    HelpExampleRpc("reloadgamemasterconfig", "")
-                }
-            }.ToString()
+            "reloadgamemasterconfig\n"
+            "\nHot-reloads the gamemasters.conf file, updating the gamemaster entries in the wallet.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"success\": true|false, (boolean) Success status.\n"
+            "  \"message\": \"xxx\"   (string) Result message.\n"
+            "}\n"
+            "\nExamples:\n" +
+            HelpExampleCli("reloadgamemasterconfig", "") +
+            HelpExampleRpc("reloadgamemasterconfig", "")
         );
     }
 
     UniValue result(UniValue::VOBJ);
 
     // Wallet context
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) {
         throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Wallet not found");
     }
 
     LOCK(pwallet->cs_wallet);
 
-    bool gmconflock = gArgs.GetBoolArg("-gmconflock", DEFAULT_GMCONFLOCK);
+    bool gmconflock = gArgs.GetBoolArg("-gmconflock", false);
 
     // Remember previous GM count for comparison
-    auto& entries = gamemasterConfig.getEntries();
+    const auto& entries = gamemasterConfig.getEntries();
     int prevCount = entries.size();
 
     // Track outpoints to unlock and backup current entries
@@ -601,8 +596,10 @@ static UniValue reloadgamemasterconfig(const JSONRPCRequest& request)
         result.pushKV("success", false);
         result.pushKV("message", "Error reloading gamemaster.conf: " + error);
 
-        // Restore old configuration
-        gamemasterConfig.setEntries(std::move(oldEntries));
+        // Restore old configuration manually
+        for (const auto& oldEntry : oldEntries) {
+            gamemasterConfig.addEntry(oldEntry);
+        }
     } else {
         // Success: Count new entries
         int newCount = gamemasterConfig.getCount();
@@ -632,7 +629,6 @@ static UniValue reloadgamemasterconfig(const JSONRPCRequest& request)
 
     return result;
 }
-
 
 
 UniValue creategamemasterkey(const JSONRPCRequest& request)

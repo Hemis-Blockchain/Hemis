@@ -179,6 +179,9 @@ public:
     // Remove proposal/budget by FeeTx (called when a block is disconnected)
     void RemoveByFeeTxId(const uint256& feeTxId);
 
+    // Check and Submit Budget declaring
+    void CheckAndSubmitBudget(int nCurrentHeight, const Consensus::Params& consensusParams, bool isTestnet);
+
     SERIALIZE_METHODS(CBudgetManager, obj)
     {
         {

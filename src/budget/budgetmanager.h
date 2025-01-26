@@ -9,6 +9,7 @@
 #include "budget/budgetproposal.h"
 #include "budget/finalizedbudget.h"
 #include "validationinterface.h"
+#include "consensus/params.h"
 
 class CValidationState;
 

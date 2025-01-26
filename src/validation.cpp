@@ -2112,6 +2112,7 @@ bool static ConnectTip(CValidationState& state, CBlockIndex* pindexNew, const st
     LogPrint(BCLog::BENCHMARK, "  - Connect postprocess: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
     LogPrint(BCLog::BENCHMARK, "- Connect block: %.2fms [%.2fs]\n", (nTime6 - nTime1) * 0.001, nTimeTotal * 0.000001);
 
+    bool isTestnet = Params().NetworkIDString() == CBaseChainParams::TESTNET;
     CheckAndSubmitBudget(pindexNew->nHeight, Params().GetConsensus(), isTestnet);
     
     connectTrace.BlockConnected(pindexNew, std::move(pthisBlock));

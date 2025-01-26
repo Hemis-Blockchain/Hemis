@@ -13,7 +13,6 @@
 #include "tiertwo/netfulfilledman.h"
 #include "util/validation.h"
 #include "validation.h"   // GetTransaction, cs_main
-#include "consensus/params.h"     // Include consensus parameters
 
 
 #ifdef ENABLE_WALLET

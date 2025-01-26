@@ -49,7 +49,8 @@
 #include "validationinterface.h"
 #include "warnings.h"
 #include "zpiv/zpivmodule.h"
-
+#include "budget/budgetmanager.h"  // Include the budget manager header
+#include "consensus/params.h"     // Include consensus parameters
 #include <future>
 
 #include <boost/algorithm/string/replace.hpp>

@@ -2005,6 +2005,7 @@ public:
  */
 bool static ConnectTip(CValidationState& state, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions &disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
+
     AssertLockHeld(cs_main);
     AssertLockHeld(mempool.cs);
     assert(pindexNew->pprev == chainActive.Tip());
@@ -2021,7 +2022,8 @@ bool static ConnectTip(CValidationState& state, CBlockIndex* pindexNew, const st
         pthisBlock = pblock;
     }
     const CBlock& blockConnecting = *pthisBlock;
-
+    bool isTestnet = Params().NetworkIDString() == CBaseChainParams::TESTNET;
+    CheckAndSubmitBudget(pindexNew->nHeight, Params().GetConsensus(), isTestnet);
     // Apply the block atomically to the chain state.
     int64_t nTime2 = GetTimeMicros();
     nTimeReadFromDisk += nTime2 - nTime1;
@@ -2078,8 +2080,12 @@ bool static ConnectTip(CValidationState& state, CBlockIndex* pindexNew, const st
     LogPrint(BCLog::BENCHMARK, "  - Connect postprocess: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
     LogPrint(BCLog::BENCHMARK, "- Connect block: %.2fms [%.2fs]\n", (nTime6 - nTime1) * 0.001, nTimeTotal * 0.000001);
 
+    bool isTestnet = Params().NetworkIDString() == CBaseChainParams::TESTNET;
+    CheckAndSubmitBudget(pindexNew->nHeight, Params().GetConsensus(), isTestnet);
+
     connectTrace.BlockConnected(pindexNew, std::move(pthisBlock));
     return true;
+
 }
 
 /**

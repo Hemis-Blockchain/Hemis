@@ -13,6 +13,8 @@
 #include "tiertwo/netfulfilledman.h"
 #include "util/validation.h"
 #include "validation.h"   // GetTransaction, cs_main
+#include "consensus/params.h"     // Include consensus parameters
+
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h" // future: use interface instead.
@@ -1582,4 +1584,26 @@ bool CheckCollateral(const uint256& nTxCollateralHash, const uint256& nExpectedH
     }
 
     return CheckCollateralConfs(nTxCollateralHash, nCurrentHeight, nProposalHeight, strError);
+}
+
+void CheckAndSubmitBudget(int nCurrentHeight, const Consensus::Params& consensusParams, bool isTestnet)
+{
+    static int lastSubmittedBlock = -1; // Tracks the last block height of submission
+
+    // Determine the finalization window
+    int nBlocksPerCycle = consensusParams.nBudgetCycleBlocks;
+    int finalizationWindow = isTestnet ? 18 : (nBlocksPerCycle / 30) * 2;
+
+    // Calculate the start of the budget cycle and the finalization window
+    int budgetCycleStart = (nCurrentHeight / nBlocksPerCycle) * nBlocksPerCycle;
+    int finalizationStartBlock = budgetCycleStart + nBlocksPerCycle - finalizationWindow;
+
+    // Ensure this is called only once per cycle
+    if (nCurrentHeight == finalizationStartBlock && lastSubmittedBlock != nCurrentHeight) {
+        g_budgetman.SubmitFinalBudget(); // Submit the final budget
+        LogPrintf("SubmitFinalBudget executed at block %d (finalization window start: %d)\n",
+                  nCurrentHeight, finalizationStartBlock);
+
+        lastSubmittedBlock = nCurrentHeight; // Update the last submitted block
+    }
 }

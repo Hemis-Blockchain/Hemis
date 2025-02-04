@@ -57,8 +57,6 @@
 #include <atomic>
 #include <queue>
 
-#include "budget/budgetmanager.h"  // Include the budget manager header
-#include "consensus/params.h"     // Include consensus parameters
 
 #if defined(NDEBUG)
 #error "Hemis cannot be compiled without assertions."
@@ -180,8 +178,7 @@ std::set<CBlockIndex*> setDirtyBlockIndex;
 std::set<int> setDirtyFileInfo;
 } // anon namespace
 
-// forward declaring
-void CheckAndSubmitBudget(int nCurrentHeight, const Consensus::Params& consensusParams, bool isTestnet);
+
 
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
 {
@@ -835,32 +832,6 @@ CAmount GetBlockValue(int nHeight)
     if (nHeight <= nLast) return 3800 * COIN;
 }
 */
-
-CAmount GetBlockValue(int nHeight)
-{
-    // Set V5.5 upgrade block for regtest as well as testnet and mainnet
-    const int nLast = Params().GetConsensus().vUpgrades[Consensus::UPGRADE_V3_4].nActivationHeight;
-
-    // Regtest block reward reduction schedule
-    if (Params().IsRegTestNet()) {
-        // Reduce regtest block value after V5.5 upgrade
-        if (nHeight > nLast) return 10 * COIN;
-        return 250 * COIN;
-    }
-
-    // Testnet high-inflation blocks [2, 200] with value 250k HMS
-    const bool isTestnet = Params().IsTestnet();
-    if (isTestnet && nHeight < 201 && nHeight > 1) {
-        return 250000 * COIN;
-    }
-
-    // Mainnet/Testnet block reward reduction schedule
-    if (nHeight > nLast) return 5.35 * COIN;
-    if (nHeight <= nLast) return 3800 * COIN;
-
-    // Default block reward (for safety, though this should never happen)
-    return 0; // Default reward if no condition is satisfied
-}
 
 
 int64_t GetGamemasterPayment(int nHeight)
@@ -2112,8 +2083,6 @@ bool static ConnectTip(CValidationState& state, CBlockIndex* pindexNew, const st
     LogPrint(BCLog::BENCHMARK, "  - Connect postprocess: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
     LogPrint(BCLog::BENCHMARK, "- Connect block: %.2fms [%.2fs]\n", (nTime6 - nTime1) * 0.001, nTimeTotal * 0.000001);
 
-    bool isTestnet = Params().NetworkIDString() == CBaseChainParams::TESTNET;
-    CheckAndSubmitBudget(pindexNew->nHeight, Params().GetConsensus(), isTestnet);
     
     connectTrace.BlockConnected(pindexNew, std::move(pthisBlock));
     return true;

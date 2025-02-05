@@ -832,6 +832,31 @@ CAmount GetBlockValue(int nHeight)
     if (nHeight <= nLast) return 3800 * COIN;
 }
 */
+CAmount GetBlockValue(int nHeight)
+{
+    // Set V5.5 upgrade block for regtest as well as testnet and mainnet
+    const int nLast = Params().GetConsensus().vUpgrades[Consensus::UPGRADE_V3_4].nActivationHeight;
+
+    // Regtest block reward reduction schedule
+    if (Params().IsRegTestNet()) {
+        // Reduce regtest block value after V5.5 upgrade
+        if (nHeight > nLast) return 10 * COIN;
+        return 250 * COIN;
+    }
+
+    // Testnet high-inflation blocks [2, 200] with value 250k HMS
+    const bool isTestnet = Params().IsTestnet();
+    if (isTestnet && nHeight < 201 && nHeight > 1) {
+        return 250000 * COIN;
+    }
+
+    // Mainnet/Testnet block reward reduction schedule
+    if (nHeight > nLast) return 5.35 * COIN;
+    if (nHeight <= nLast) return 3800 * COIN;
+
+    // Default block reward (for safety, though this should never happen)
+    return 0; // Default reward if no condition is satisfied
+}
 
 
 int64_t GetGamemasterPayment(int nHeight)

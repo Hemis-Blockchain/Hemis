@@ -530,7 +530,6 @@ UniValue gmbudgetrawvote(const JSONRPCRequest& request)
         return "Error voting : " + strError;
     }
 }
-}
 
 UniValue gmfinalbudgetsuggest(const JSONRPCRequest& request)
 {

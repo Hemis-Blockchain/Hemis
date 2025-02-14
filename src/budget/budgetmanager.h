@@ -88,7 +88,6 @@ public:
     CDataStream GetProposalVoteSerialized(const uint256& voteHash) const;
     CDataStream GetProposalSerialized(const uint256& propHash) const;
     CDataStream GetFinalizedBudgetVoteSerialized(const uint256& voteHash) const;
-
     CDataStream GetFinalizedBudgetSerialized(const uint256& budgetHash) const;
 
     bool AddAndRelayProposalVote(const CBudgetVote& vote, std::string& strError);

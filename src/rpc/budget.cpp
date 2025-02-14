@@ -683,7 +683,7 @@ UniValue gmfinalbudget(const JSONRPCRequest& request)
             bObj.pushKV("BlockEnd", (int64_t)finalizedBudget->GetBlockEnd());
             bObj.pushKV("Proposals", finalizedBudget->GetProposalsStr());
             bObj.pushKV("VoteCount", (int64_t)finalizedBudget->GetVoteCount());
-            bObj.pushKV("Status", GetFinalizedBudgetStatus(finalizedBudget));
+            bObj.pushKV("Status", g_budgetman.GetFinalizedBudgetStatus(nHash));
 
             bool fValid = finalizedBudget->IsValid();
             bObj.pushKV("IsValid", fValid);

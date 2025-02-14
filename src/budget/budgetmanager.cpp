@@ -207,6 +207,43 @@ void CBudgetManager::SetBudgetProposalsStr(CFinalizedBudget& finalizedBudget) co
     finalizedBudget.SetProposalsStr(strProposals);
 }
 
+std::string CBudgetManager::GetFinalizedBudgetStatus(const uint256& nHash) const
+{
+    CFinalizedBudget fb;
+    if (!GetFinalizedBudget(nHash, fb))
+        return strprintf("ERROR: cannot find finalized budget %s\n", nHash.ToString());
+
+    std::string retBadHashes = "";
+    std::string retBadPayeeOrAmount = "";
+    int nBlockStart = fb.GetBlockStart();
+    int nBlockEnd = fb.GetBlockEnd();
+
+    for (int nBlockHeight = nBlockStart; nBlockHeight <= nBlockEnd; nBlockHeight++) {
+        CTxBudgetPayment budgetPayment;
+        if (!fb.GetBudgetPaymentByBlock(nBlockHeight, budgetPayment)) {
+            LogPrint(BCLog::GMBUDGET,"%s: Couldn't find budget payment for block %lld\n", __func__, nBlockHeight);
+            continue;
+        }
+
+        CBudgetProposal bp;
+        if (!GetProposal(budgetPayment.nProposalHash, bp)) {
+            retBadHashes += (retBadHashes == "" ? "" : ", ") + budgetPayment.nProposalHash.ToString();
+            continue;
+        }
+
+        if (bp.GetPayee() != budgetPayment.payee || bp.GetAmount() != budgetPayment.nAmount) {
+            retBadPayeeOrAmount += (retBadPayeeOrAmount == "" ? "" : ", ") + budgetPayment.nProposalHash.ToString();
+        }
+    }
+
+    if (retBadHashes == "" && retBadPayeeOrAmount == "") return "OK";
+
+    if (retBadHashes != "") retBadHashes = "Unknown proposal(s) hash! Check this proposal(s) before voting: " + retBadHashes;
+    if (retBadPayeeOrAmount != "") retBadPayeeOrAmount = "Budget payee/nAmount doesn't match our proposal(s)! "+ retBadPayeeOrAmount;
+
+    return retBadHashes + " -- " + retBadPayeeOrAmount;
+}
+
 bool CBudgetManager::AddFinalizedBudget(CFinalizedBudget& finalizedBudget, CNode* pfrom)
 {
     AssertLockNotHeld(cs_budgets);    // need to lock cs_main here (CheckCollateral)
@@ -640,6 +677,15 @@ bool CBudgetManager::GetProposal(const uint256& nHash, CBudgetProposal& bp) cons
     return true;
 }
 
+bool CBudgetManager::GetFinalizedBudget(const uint256& nHash, CFinalizedBudget& fb) const
+{
+    LOCK(cs_budgets);
+    auto it = mapFinalizedBudgets.find(nHash);
+    if (it == mapFinalizedBudgets.end()) return false;
+    fb = it->second;
+    return true;
+}
+
 bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight, int& nCountThreshold) const
 {
     int nHighestCount = GetHighestVoteCount(nBlockHeight);
@@ -902,6 +948,16 @@ CDataStream CBudgetManager::GetFinalizedBudgetSerialized(const uint256& budgetHa
 {
     LOCK(cs_budgets);
     return mapFinalizedBudgets.at(budgetHash).GetBroadcast();
+}
+
+bool CBudgetManager::AddAndRelayProposalVote(const CBudgetVote& vote, std::string& strError)
+{
+    if (UpdateProposal(vote, nullptr, strError)) {
+        AddSeenProposalVote(vote);
+        vote.Relay();
+        return true;
+    }
+    return false;
 }
 
 void CBudgetManager::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
@@ -1541,12 +1597,10 @@ bool CheckCollateral(const uint256& nTxCollateralHash, const uint256& nExpectedH
 
     if (txCollateral->vout.empty()) return false;
     if (txCollateral->nLockTime != 0) return false;
-    if (nBlockHash.IsNull()) {
-        strError = strprintf("Collateral transaction %s is unconfirmed", nTxCollateralHash.ToString());
-        return false;
-    }
 
-    CScript findScript = CScript() << OP_RETURN << ToByteVector(nExpectedHash);
+
+    CScript findScript;
+    findScript << OP_RETURN << ToByteVector(nExpectedHash);
     CAmount expectedAmount = fBudgetFinalization ?  BUDGET_FEE_TX : PROPOSAL_FEE_TX;
 
     bool foundOpReturn = false;
@@ -1555,9 +1609,28 @@ bool CheckCollateral(const uint256& nTxCollateralHash, const uint256& nExpectedH
             strError = strprintf("Invalid Script %s", txCollateral->ToString());
             return false;
         }
-        if (o.scriptPubKey == findScript && o.nValue == expectedAmount) {
-            foundOpReturn = true;
-            break;
+        if (fBudgetFinalization) {
+            // Collateral for budget finalization
+            // Note: there are still old valid budgets out there, but the check for the new 5 PIV finalization collateral
+            //       will also cover the old 50 PIV finalization collateral.
+            LogPrint(BCLog::GMBUDGET, "Final Budget: o.scriptPubKey(%s) == findScript(%s) ?\n", HexStr(o.scriptPubKey), HexStr(findScript));
+            if (o.scriptPubKey == findScript) {
+                LogPrint(BCLog::GMBUDGET, "Final Budget: o.nValue(%ld) >= BUDGET_FEE_TX(%ld) ?\n", o.nValue, BUDGET_FEE_TX);
+                if(o.nValue >= BUDGET_FEE_TX) {
+                    foundOpReturn = true;
+                    break;
+                }
+            }
+        } else {
+            // Collateral for normal budget proposal
+            LogPrint(BCLog::GMBUDGET, "Normal Budget: o.scriptPubKey(%s) == findScript(%s) ?\n", HexStr(o.scriptPubKey), HexStr(findScript));
+            if (o.scriptPubKey == findScript) {
+                LogPrint(BCLog::GMBUDGET, "Normal Budget: o.nValue(%ld) >= PROPOSAL_FEE_TX(%ld) ?\n", o.nValue, PROPOSAL_FEE_TX);
+                if(o.nValue >= PROPOSAL_FEE_TX) {
+                    foundOpReturn = true;
+                    break;
+                }
+            }
         }
     }
 

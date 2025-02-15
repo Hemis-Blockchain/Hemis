@@ -1601,7 +1601,6 @@ bool CheckCollateral(const uint256& nTxCollateralHash, const uint256& nExpectedH
 
     CScript findScript;
     findScript << OP_RETURN << ToByteVector(nExpectedHash);
-    CAmount expectedAmount = fBudgetFinalization ?  BUDGET_FEE_TX : PROPOSAL_FEE_TX;
 
     bool foundOpReturn = false;
     for (const CTxOut &o : txCollateral->vout) {

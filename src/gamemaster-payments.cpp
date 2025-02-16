@@ -357,6 +357,8 @@ static void SubtractGmPaymentFromCoinstake(CMutableTransaction& txCoinstake, CAm
     //subtract gm payment from the stake reward
     if (stakerOuts == 2) {
         // Majority of cases; do it quick and move on
+        CBlockIndex* pindex = chainActive.Tip();
+        int nHeight = pindex->nHeight;
         CAmount nSubsidy = GetBlockValue(nHeight);
         nSubsidy *= 0.10;
         txCoinstake.vout[1].nValue -= gamemasterPayment+nSubsidy;

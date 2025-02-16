@@ -9,6 +9,7 @@
 #include "evo/deterministicgms.h"
 #include "fs.h"
 #include "budget/budgetmanager.h"
+
 #include "gamemasterman.h"
 #include "netmessagemaker.h"
 #include "tiertwo/netfulfilledman.h"
@@ -18,6 +19,7 @@
 #include "util/system.h"
 #include "utilmoneystr.h"
 #include "validation.h"
+
 
 
 /** Object for who's going to get paid on which blocks */
@@ -355,7 +357,9 @@ static void SubtractGmPaymentFromCoinstake(CMutableTransaction& txCoinstake, CAm
     //subtract gm payment from the stake reward
     if (stakerOuts == 2) {
         // Majority of cases; do it quick and move on
-        txCoinstake.vout[1].nValue -= gamemasterPayment;
+        CAmount nSubsidy = GetBlockValue(nHeight);
+        nSubsidy *= 0.10;
+        txCoinstake.vout[1].nValue -= gamemasterPayment+nSubsidy;
     } else {
         // special case, stake is split between (stakerOuts-1) outputs
         unsigned int outputs = stakerOuts-1;

@@ -9,6 +9,7 @@
 #include "budget/budgetproposal.h"
 #include "budget/finalizedbudget.h"
 #include "validationinterface.h"
+#include "consensus/params.h"
 
 class CValidationState;
 
@@ -89,8 +90,14 @@ public:
     CDataStream GetFinalizedBudgetVoteSerialized(const uint256& voteHash) const;
     CDataStream GetFinalizedBudgetSerialized(const uint256& budgetHash) const;
 
+    bool AddAndRelayProposalVote(const CBudgetVote& vote, std::string& strError);
+
     // sets strProposal of a CFinalizedBudget reference
     void SetBudgetProposalsStr(CFinalizedBudget& finalizedBudget) const;
+
+    // checks finalized budget proposals (existence, payee, amount) for the finalized budget
+    // in the map, with given nHash. Returns error string if any, or "OK" otherwise
+    std::string GetFinalizedBudgetStatus(const uint256& nHash) const;
 
     void ResetSync() { SetSynced(false); }
     void MarkSynced() { SetSynced(true); }
@@ -117,6 +124,7 @@ public:
     CFinalizedBudget* FindFinalizedBudget(const uint256& nHash);
     // const functions, copying the budget object to a reference and returning true if found
     bool GetProposal(const uint256& nHash, CBudgetProposal& bp) const;
+    bool GetFinalizedBudget(const uint256& nHash, CFinalizedBudget& fb) const;
     // finds the proposal with the given name, with highest net yes count.
     const CBudgetProposal* FindProposalByName(const std::string& strProposalName) const;
 

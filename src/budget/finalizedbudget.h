@@ -60,7 +60,7 @@ public:
     CFinalizedBudget(const std::string& name, int blockstart, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, const uint256& nfeetxhash);
 
     bool AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::string& strError);
-    std::map<COutPoint, CFinalizedBudgetVote> GetVotes() const { return mapVotes; }
+    UniValue GetVotesObject() const;
     void SetSynced(bool synced);    // sets fSynced on votes (true only if valid)
 
     // sync budget votes with a node

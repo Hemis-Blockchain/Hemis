@@ -165,13 +165,14 @@ static Consensus::LLMQParams llmq400_85 = {
 static MapCheckpoints mapCheckpoints = {
 {0, uint256S   ("0x000000956c582b70df5d2c9b4b83d05b5331978e40d639739bdc96c29e156ce7")},
 {9500, uint256S("0xa69189f2e1fd4ba82d177710158cae3e8aaad2b52993e63628a8d7120840577b")},
-{276055, uint256S("0xca1660689e66c0cc5cce36abeb92b4209bc0978ec11c8ca4f339dec9dbfab8e4")}
+{276055, uint256S("0xca1660689e66c0cc5cce36abeb92b4209bc0978ec11c8ca4f339dec9dbfab8e4")},
+{695496, uint256S("0x1287dc1709ffc2779d6993bcb2c9df45c8590dbba9333f4e8e7b0a0cba10e342")}
 };
 
 static const CCheckpointData data = {
     &mapCheckpoints,
-    1722614175, // * UNIX timestamp of last checkpoint block
-    565159,      // * total number of transactions between genesis and last checkpoint
+    1748731575, // * UNIX timestamp of last checkpoint block
+    725760,      // * total number of transactions between genesis and last checkpoint
                 //   (the tx=... number in the UpdateTip debug.log lines)
     100         // * estimated number of transactions per day after checkpoint
 };

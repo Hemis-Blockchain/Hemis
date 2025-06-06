@@ -353,24 +353,28 @@ bool CGamemasterPayments::GetLegacyGamemasterTxOut(int nHeight, std::vector<CTxO
 
 static void SubtractGmPaymentFromCoinstake(CMutableTransaction& txCoinstake, CAmount gamemasterPayment, int stakerOuts)
 {
-    assert (stakerOuts >= 2);
-    //subtract gm payment from the stake reward
+    assert(stakerOuts >= 2);
+
+    // 1. Deduct 10% from each staking output (cold/hot) as DAO fee
+    for (int i = 1; i < stakerOuts; ++i) {
+        CTxOut& out = txCoinstake.vout[i];
+        if (out.nValue <= 0)
+            continue;
+
+        CAmount daoFee = out.nValue / 9; // equivalent to 10% of full reward (reward * 0.1 = reward / 10), but since it's post-reduction: reward = 0.9 * original ⇒ original = reward / 0.9 ⇒ 10% of original = reward / 9
+        out.nValue -= daoFee;
+    }
+
+    // 2. Deduct GM payment from reward outputs
     if (stakerOuts == 2) {
-        // Majority of cases; do it quick and move on
-        CBlockIndex* pindex = chainActive.Tip();
-        int nHeight = pindex->nHeight;
-        CAmount nSubsidy = GetBlockValue(nHeight);
-        nSubsidy *= 0.10;
-        txCoinstake.vout[1].nValue -= gamemasterPayment+nSubsidy;
+        txCoinstake.vout[1].nValue -= gamemasterPayment;
     } else {
-        // special case, stake is split between (stakerOuts-1) outputs
-        unsigned int outputs = stakerOuts-1;
+        unsigned int outputs = stakerOuts - 1;
         CAmount gmPaymentSplit = gamemasterPayment / outputs;
         CAmount gmPaymentRemainder = gamemasterPayment - (gmPaymentSplit * outputs);
-        for (unsigned int j=1; j<=outputs; j++) {
+        for (unsigned int j = 1; j <= outputs; ++j) {
             txCoinstake.vout[j].nValue -= gmPaymentSplit;
         }
-        // in case it's not an even division, take the last bit of dust from the last one
         txCoinstake.vout[outputs].nValue -= gmPaymentRemainder;
     }
 }
